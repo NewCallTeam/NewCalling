@@ -118,17 +118,17 @@ afterEvaluate {
     }
 }
 
-// jitpack maven发布使用
-allprojects {
-    repositories {
-        google()
-        jcenter()
-        maven { url "https://jitpack.io" }
-    }
-    dependencies {
-        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
-    }
-}
+// 通过 jitpack 引用AwesomeNewCall
+//allprojects {
+//    repositories {
+//        google()
+//        jcenter()
+//        maven { url "https://jitpack.io" }
+//    }
+//    dependencies {
+//        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
+//    }
+//}
 
 
 dependencies {
