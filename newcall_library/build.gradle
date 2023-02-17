@@ -109,7 +109,7 @@ afterEvaluate {
                 version = 'master-SNAPSHOT'
 
                 // 可以指定上传的AAR包
-                artifact "$buildDir/outputs/aar/${project.name}-Spreadtrum-release.aar"
+                //artifact "$buildDir/outputs/aar/${project.name}-Spreadtrum-release.aar"
             }
         }
     }
