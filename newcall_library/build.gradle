@@ -106,12 +106,15 @@ afterEvaluate {
                 // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-0.6.1'
                 groupId = 'com.github.NewCallTeam'
                 artifactId = 'AwesomeNewCall'
-                version = '0.6.1'
+                version = 'master-SNAPSHOT'
 
                 //可以指定上传的AAR包，但是需要先手动生成aar
                 artifact "$buildDir/outputs/aar/${project.name}-release.aar"
             }
         }
+    }
+    repositories {
+        mavenLocal()
     }
 }
 
