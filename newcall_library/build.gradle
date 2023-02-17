@@ -103,13 +103,13 @@ afterEvaluate {
 //                from components.productionRelease
 
                 // 发布后按如下方式使用
-                // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-0.6.1'
+                // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
                 groupId = 'com.github.NewCallTeam'
                 artifactId = 'AwesomeNewCall'
                 version = 'master-SNAPSHOT'
 
-                //可以指定上传的AAR包，但是需要先手动生成aar
-                artifact "$buildDir/outputs/aar/${project.name}-release.aar"
+                // 可以指定上传的AAR包
+                artifact "$buildDir/outputs/aar/${project.name}-Spreadtrum-release.aar"
             }
         }
     }
@@ -132,23 +132,20 @@ afterEvaluate {
 
 
 dependencies {
+    // jars
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    //implementation fileTree(dir: 'libs', include: ['*.aar'])
-
+    // android
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-
     implementation "androidx.core:core-ktx:1.3.2"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
-
-    // jars
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-
+    // junit
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     // gson
     implementation 'com.google.code.gson:gson:2.8.6'
     // bolts
@@ -159,24 +156,20 @@ dependencies {
     kapt("androidx.room:room-compiler:2.4.2")
     // okio
     implementation "com.squareup.okio:okio:2.8.0"
-
-    // dc aidl接口
-    embed (name: 'newcall_dc_aidl-release', ext: 'aar')
-    api (name: 'newcall_dc_aidl-release', ext: 'aar')
-
-    // http stack for ims dc.
-    embed(name: 'newcall_dc_httpstack-release', ext: 'aar')
-    api(name: 'newcall_dc_httpstack-release', ext: 'aar')
-
-    // dc 涂鸦
-    embed (name: 'newcall_sketch-release', ext: 'aar')
-    api (name: 'newcall_sketch-release', ext: 'aar')
-
+    // glide
     implementation "com.github.bumptech.glide:glide:4.12.0"
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-
     // PictureSelector 基础 (必须)
     implementation 'io.github.lucksiege:pictureselector:v3.10.7'
     implementation 'io.github.lucksiege:camerax:v3.10.7'
+    // dc
+    // dc aidl接口
+    embed (name: 'newcall_dc_aidl-release', ext: 'aar')
+    api (name: 'newcall_dc_aidl-release', ext: 'aar')
+    // dc: http stack for ims dc.
+    embed(name: 'newcall_dc_httpstack-release', ext: 'aar')
+    api(name: 'newcall_dc_httpstack-release', ext: 'aar')
+    // dc: 涂鸦
+    embed (name: 'newcall_sketch-release', ext: 'aar')
+    api (name: 'newcall_sketch-release', ext: 'aar')
 
 }
