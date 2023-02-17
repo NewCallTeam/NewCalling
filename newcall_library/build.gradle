@@ -118,6 +118,18 @@ afterEvaluate {
     }
 }
 
+// jitpack maven发布使用
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+    dependencies {
+        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
+    }
+}
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
