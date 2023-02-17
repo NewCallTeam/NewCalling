@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'maven-publish'
 apply plugin: 'com.kezong.fat-aar'
 
 android {
@@ -91,6 +92,26 @@ repositories {
     mavenCentral()
     flatDir {
         dirs 'libs'
+    }
+}
+
+afterEvaluate {
+    publishing{
+        publications{
+            // Creates a Maven publication called "release".
+            productionRelease(MavenPublication) {
+//                from components.productionRelease
+
+                // 发布后按如下方式使用
+                // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-0.6.1'
+                groupId = 'com.github.NewCallTeam'
+                artifactId = 'AwesomeNewCall'
+                version = '0.6.1'
+
+                //可以指定上传的AAR包，但是需要先手动生成aar
+                artifact "$buildDir/outputs/aar/${project.name}-release.aar"
+            }
+        }
     }
 }
 
