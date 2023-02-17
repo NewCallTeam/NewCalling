@@ -1,2 +1,2 @@
-rootProject.name='NewCallSDK'
+rootProject.name='AwesomeNewCall'
 include ':newcall_library'
