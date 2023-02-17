@@ -1,5 +1,6 @@
 package com.cmcc.newcalllib.manage.bussiness.interact
 
+import android.text.TextUtils
 import com.cmcc.newcalllib.manage.ext.ExtensionManager
 import com.cmcc.newcalllib.adapter.network.NetworkAdapter
 import com.cmcc.newcalllib.adapter.network.Origin
@@ -21,6 +22,7 @@ import com.cmcc.newcalllib.tool.constant.EventType
 import com.google.gson.JsonParseException
 import java.lang.Exception
 import java.nio.ByteBuffer
+import java.util.ArrayList
 
 /**
  * @author jihongfei
@@ -78,24 +80,28 @@ class JsCommunicator(
                 )
             }
 
-            override fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int) {
-                LogUtil.d("onImsDataChannelSetupRequest, dcLabel=$dcLabels")
+            override fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int, callId: String) {
+                LogUtil.d("onImsDataChannelSetupRequest, dcLabels=$dcLabels slotId=$slotId")
                 // call dataChannelNotify to JS
-
                 val cleanDcLabels =
                     dcLabels.map { networkAdapter.getLabelDecorator().removeOrigin(it) }
                         .toTypedArray()
+                // call dataChannelNotify to JS
                 dataChannelNotify(cleanDcLabels, object : CallBackFunction {
                     override fun onCallBack(data: String?) {
+                        // 如果是"屏幕共享"，约定此处不会被Js前端回调
+                        // （因屏幕共享由SDK实现，并不需要启动小程序，故不执行onCallBack后续代码逻辑）
                         // check arguments
                         if (data.isNullOrEmpty()) {
                             LogUtil.e("dataChannelNotify callback with empty")
-//                            networkAdapter.respondDataChannelSetupRequest(
-//                                dcLabels,
-//                                emptyArray(),
-//                                slotId
-//                                //callId
-//                            )
+                            if (slotId >= 0) {
+                                networkAdapter.respondDataChannelSetupRequest(
+                                    dcLabels,
+                                    emptyArray(),
+                                    slotId,
+                                    callId
+                                )
+                            }
                             return
                         }
                         var r: RespNotifyDataChannel? = null
@@ -103,12 +109,14 @@ class JsCommunicator(
                             r = JsonUtil.fromJson(data, RespNotifyDataChannel::class.java)
                         } catch (e: JsonParseException) {
                             LogUtil.e("dataChannelNotify callback with bad argument, data=$data", e)
-//                            networkAdapter.respondDataChannelSetupRequest(
-//                                dcLabels,
-//                                emptyArray(),
-//                                slotId
-//                                //callId
-//                            )
+                            if (slotId >= 0) {
+                                networkAdapter.respondDataChannelSetupRequest(
+                                    dcLabels,
+                                    emptyArray(),
+                                    slotId,
+                                    callId
+                                )
+                            }
                             return
                         }
 
@@ -119,12 +127,14 @@ class JsCommunicator(
                         val origin = if (dcLabels.any() { it.startsWith(Origin.LOCAL.getName()) }) Origin.LOCAL else Origin.REMOTE
                         LogUtil.d("dataChannelNotify callback, r=$r, dcLabels=$dcLabels, " +
                                 "acceptArr=$acceptArr, origin=${origin.getName()}")
-//                        networkAdapter.respondDataChannelSetupRequest(
-//                            dcLabels,
-//                            acceptArr,
-//                            slotId
-//                            //callId
-//                        )
+                        if (slotId >= 0) {
+                            networkAdapter.respondDataChannelSetupRequest(
+                                dcLabels,
+                                acceptArr,
+                                slotId,
+                                callId
+                            )
+                        }
                         // prepare app then auto launch
                         if (!r.url.isNullOrEmpty() && !r.appid.isNullOrEmpty() && !r.etag.isNullOrEmpty()) {
                             miniAppManager.prepareMiniApp(origin, r.url!!, r.appid!!, r.etag!!, object :
@@ -225,4 +235,5 @@ class JsCommunicator(
         val vNotify = VisibilityNotify(state)
         callJsFunction(JS_FUNC_NAME_VISIBILITY_NOTIFY, JsonUtil.toJson(vNotify), cb)
     }
+
 }

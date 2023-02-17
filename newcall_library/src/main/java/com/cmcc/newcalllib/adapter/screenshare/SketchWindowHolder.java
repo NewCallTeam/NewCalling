@@ -301,6 +301,10 @@ public class SketchWindowHolder {
      */
     private void addSketchView(@SketchWindowHolder.CallType int callType) {
         //设置悬浮窗布局属性
+        if (mWindowManager != null) {
+            LogUtil.INSTANCE.d("SketchWindowHolder","SketchWindow is showing");
+            return;
+        }
         mWindowManager = (WindowManager) mActivity.getSystemService(Context.WINDOW_SERVICE);
 
         /**

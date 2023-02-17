@@ -31,7 +31,7 @@ class DataSplitManager : DataSplitter, DataAggregator {
         LogUtil.d("DataSplitManager", "split on $label, subProtocol=$subProtocol, " +
                 "bufferCapacity=${buffer.capacity()}, limit=$limit")
         if (subProtocol.contains(SUB_PROTOCOL_HTTP, true)) {
-            LogUtil.d("DataSplitManager","httpAggregator")
+            LogUtil.d("DataSplitManager","httpSplitter")
             // http response
             httpSplitter.split(subProtocol, label, buffer, limit, callback)
         } else {

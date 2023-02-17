@@ -137,7 +137,7 @@ public class DialogTools {
         if (layoutWidth > 0) {
             params.width = layoutWidth;
         } else {
-            params.width = DisplayHelper.dip2px(context, 288);
+            params.width = DisplayHelper.dp2px(context, 288);
         }
         dlg.getWindow().setAttributes(params);
         Window window = dlg.getWindow();

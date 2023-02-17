@@ -128,7 +128,8 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
 
     fun bindInCallUI(activity: Activity?) {
         mNativeAbilityProvider.bindActivity(activity)
-        mExtensionManager.getScreenShareManager().activity = activity
+        mExtensionManager.getScreenShareManager().mActivity = activity
+        mExtensionManager.getSTTManager().mActivity = activity
     }
 
     private fun initNetAdapter(context: Context) {
@@ -137,7 +138,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
                 networkConfig = NetworkConfig.Builder()
                     .setHost("")
                     .setSlotId(callInfo.slotId)
-                    .setBufferAmount(Constants.DC_BUFFER_AMOUNT_BYTES)
+                    .setBufferAmount(ConfigManager.dcBufferAmountSize)
                     .build(),
                 labelDecorator = LabelDecoratorImpl()
         )
@@ -336,7 +337,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
     }
 
     fun setScreenShareHandler(handler: ScreenShareHandler) {
-        mExtensionManager.getScreenShareManager().screenShareHandler = handler
+        mExtensionManager.getScreenShareManager().mScreenShareHandler = handler
     }
 
     fun setCallState(callState: Int) {

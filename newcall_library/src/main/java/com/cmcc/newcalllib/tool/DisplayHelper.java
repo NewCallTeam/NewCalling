@@ -28,7 +28,6 @@ public class DisplayHelper {
     private static int mDisplayDpi;
 
     public static void initDisplaySize(Activity activity) {
-        Log.d("xiaxl: ", "---initDisplaySize---");
         if (activity != null) {
             DisplayMetrics metrics = new DisplayMetrics();
             Display display = activity.getWindowManager().getDefaultDisplay();
@@ -53,30 +52,30 @@ public class DisplayHelper {
 
 
     /**
-     * 将px值转换为dip或dp值，保证尺寸大小不变
+     * px转换为dp
      *
-     * @param pxValue （DisplayMetrics类中属性density）
+     * @param px
      * @return
      */
-    public static int px2dip(Context context, float pxValue) {
+    public static int px2dp(Context context, float px) {
         if (context != null) {
             final float scale = context.getResources().getDisplayMetrics().density;
-            return (int) (pxValue / scale + 0.5f);
+            return (int) (px / scale + 0.5f);
         }
-        return (int) pxValue;
+        return (int) px;
     }
 
     /**
-     * 将dip或dp值转换为px值，保证尺寸大小不变
+     * dp值转换为px
      *
-     * @param dipValue （DisplayMetrics类中属性density）
+     * @param dp
      * @return
      */
-    public static int dip2px(Context context, float dipValue) {
+    public static int dp2px(Context context, float dp) {
         if (context != null) {
             final float scale = context.getResources().getDisplayMetrics().density;
-            return (int) (dipValue * scale + 0.5f);
+            return (int) (dp * scale + 0.5f);
         }
-        return (int) dipValue;
+        return (int) dp;
     }
 }

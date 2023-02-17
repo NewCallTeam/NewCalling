@@ -463,7 +463,7 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                 } else {
                     getJsCommunicator().networkAdapter.sendHttpGet(r.dclabel, "", emptyMap(),
                         object : NetworkAdapter.HttpRequestCallback {
-                            override fun onSendStatus(statusCode: Int, errorCode: Int) {
+                            override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                                 LogUtil.d("sendHttp statusCode=$statusCode, errCode=$errorCode")
                                 invokeCallback(cbFromJs, ResponseData<Any>(statuscode = statusCode))
                             }

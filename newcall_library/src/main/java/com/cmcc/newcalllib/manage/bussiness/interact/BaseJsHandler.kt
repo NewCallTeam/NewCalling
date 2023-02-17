@@ -9,6 +9,7 @@ import com.cmcc.newcalllib.tool.JsonUtil
 import com.cmcc.newcalllib.tool.LogUtil
 import com.cmcc.newcalllib.tool.constant.ErrorCode
 import com.cmcc.newcalllib.tool.constant.EventType
+import com.cmcc.newcalllib.tool.thread.ThreadPoolUtil
 import com.google.gson.JsonParseException
 
 /**
@@ -49,18 +50,22 @@ abstract class BaseJsHandler : JsHandler {
 
     protected fun invokeCallback(cbFromJs: CallBackFunction, responseData: ResponseData<*>) {
         val toJson = JsonUtil.toJson(responseData)
-        LogUtil.v("invokeCallback, resp json: $toJson")
-        cbFromJs.onCallBack(toJson)
+        LogUtil.d("invokeCallback, resp json: $toJson")
+        ThreadPoolUtil.runOnUiThread {
+            cbFromJs.onCallBack(toJson)
+        }
     }
 
     protected fun invokeCallback(cbFromJs: CallBackFunction, err: ErrorCode) {
         LogUtil.e("invokeCallback with err:${err.reason()}")
-        invokeCallback(
-            cbFromJs, ResponseData<Any>(
-                result = 0,
-                message = err.reason()
+        ThreadPoolUtil.runOnUiThread {
+            invokeCallback(
+                cbFromJs, ResponseData<Any>(
+                    result = 0,
+                    message = err.reason()
+                )
             )
-        )
+        }
     }
 
     /**

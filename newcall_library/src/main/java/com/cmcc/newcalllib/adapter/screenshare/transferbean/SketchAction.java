@@ -24,12 +24,14 @@ public class SketchAction {
      */
     @Retention(RetentionPolicy.SOURCE)
     // 限定取值范围
-    @IntDef({SketchAction.Type.DRAWING, SketchAction.Type.UNDO})
+    @IntDef({SketchAction.Type.SHOW_SKETCH_WINDOW, SketchAction.Type.DRAWING, SketchAction.Type.UNDO})
     public @interface Type {
+        // 展示悬浮窗
+        int SHOW_SKETCH_WINDOW = 1;
         // 绘制动作
-        int DRAWING = 1;
+        int DRAWING = 2;
         // 撤销动作
-        int UNDO = 2;
+        int UNDO = 3;
     }
 
     // 动作id
@@ -91,6 +93,10 @@ public class SketchAction {
         public SketchAction build() {
 
             switch (actionType) {
+                case Type.SHOW_SKETCH_WINDOW:
+                    SketchAction sketchAction = new SketchAction();
+                    sketchAction.actionType = actionType;
+                    return sketchAction;
                 case Type.DRAWING:
                     if (sketchInfoBeans != null && sketchInfoBeans.size() > 0) {
                         SketchInfoBean sketchInfo = sketchInfoBeans.get(0);
@@ -105,7 +111,6 @@ public class SketchAction {
             }
             return null;
         }
-
 
         /**
          * 生成绘制动作
@@ -139,7 +144,6 @@ public class SketchAction {
             sketchAction.actionType = Type.UNDO;
             //
             SketchMsgUndo sketchMsgUndo = new SketchMsgUndo();
-            //
             List<String> undoSketchIds = new ArrayList<String>();
             for (SketchInfoBean bean : sketchInfoBeans) {
                 String sketchId = bean.getSketchId();

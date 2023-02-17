@@ -42,6 +42,7 @@ class ExtensionManager(
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         screenShareManager.onActivityResult(requestCode, resultCode, data)
+        sttManager.onActivityResult(requestCode, resultCode, data)
     }
 
     fun getScreenShareManager(): ScreenShareManager {
@@ -58,10 +59,11 @@ class ExtensionManager(
 
     fun onCallStateChanged(state: Int) {
         screenShareManager.onCallStateChanged(state)
+        sttManager.onCallStateChanged(state)
     }
 
     fun onRelease(slotId: Int, callId: String) {
-        screenShareManager.exitSketchControlWindow()
+        screenShareManager.disableScreenShare()
         arManager.stopARCall(slotId, callId, null)
         sttManager.disableSTT(null)
     }

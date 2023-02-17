@@ -47,6 +47,7 @@ class HttpAggregator : DataAggregator {
                 byteBuffer.capacity()
             )
         }
+        LogUtil.d("HttpAggregator", "aggregate. subProtocol: $subProtocol dcLabel: $dcLabel byteBuffer: $byteBuffer")
         // 数据是否完整
         var complete = HttpStack.verifyHttp1ResponseCompleted(allByteBuffers[dcLabel])
         LogUtil.d("HttpAggregator", "complete: $complete")

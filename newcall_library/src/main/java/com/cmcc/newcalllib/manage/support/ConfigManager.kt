@@ -12,4 +12,5 @@ object ConfigManager {
 
     var dcServiceAction = BuildConfig.ACTION_NAME;
     var dcServicePackage = BuildConfig.PACKAGE_NAME;
+    var dcBufferAmountSize: Long = BuildConfig.CHUNK_SIZE
 }

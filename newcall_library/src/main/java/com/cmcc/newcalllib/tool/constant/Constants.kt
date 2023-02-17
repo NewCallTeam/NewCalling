@@ -1,6 +1,7 @@
 package com.cmcc.newcalllib.tool.constant
 
 import android.text.TextUtils
+import com.cmcc.newcalllib.BuildConfig
 import com.cmcc.newcalllib.adapter.network.Origin
 import com.cmcc.newcalllib.tool.LogUtil
 
@@ -26,8 +27,6 @@ class Constants {
         const val TRANSFER_FILE_ROOT_PATH = "trans/"
         const val MANUALLY_SAVE_FILE_ROOT_PATH = "save/"
         const val MINI_APP_PRIVATE_SPACE_PATH = "priv/"
-
-        const val DC_BUFFER_AMOUNT_BYTES: Long = 1024 * 1024
 
         /**
          * 获取bdc label

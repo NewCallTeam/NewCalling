@@ -195,6 +195,18 @@ abstract class NetworkAdapter(
     }
 
     /**
+     * send status and message arrival callback for HTTP request over DC
+     */
+    interface HttpRequestCallback : RequestCallback {
+        fun onMessageCallback(
+                status: Int,
+                msg: String,
+                headers: MutableMap<String, String>?,
+                body: ByteArray?
+        )
+    }
+
+    /**
      * message arrival callback for basic DC request
      */
     interface DataObserver {
@@ -203,26 +215,12 @@ abstract class NetworkAdapter(
     }
 
     /**
-     * send status and message arrival callback for HTTP request over DC
-     */
-    interface HttpRequestCallback {
-
-        fun onSendStatus(statusCode: Int, errorCode: Int)
-
-        fun onMessageCallback(
-            status: Int,
-            msg: String,
-            headers: MutableMap<String, String>?,
-            body: ByteArray?
-        )
-    }
-
-    /**
      * Callback to notify DC request or state change
      */
     interface DataChannelCallback {
         fun onBootstrapDataChannelCreated(success: Boolean)
-        fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int)
+        // create AppDc by remote
+        fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int, callId: String)
     }
 
     /**

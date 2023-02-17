@@ -22,6 +22,7 @@ import com.cmcc.newcalllib.tool.*
 import com.cmcc.newcalllib.tool.constant.Constants
 import java.io.File
 import java.io.FileOutputStream
+import java.lang.Integer.min
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -157,7 +158,7 @@ class MiniAppManager(
                 headers["If-None-Match"] = localVer
                 // download
                 netAdapter.reqHttpGetOnBDC(Origin.LOCAL, urlWithVer, headers,object : NetworkAdapter.HttpRequestCallback {
-                    override fun onSendStatus(statusCode: Int, errorCode: Int) {
+                    override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                         LogUtil.d(
                             "Get bs app, " +
                                     "statusCode=$statusCode, errCode=$errorCode"
@@ -249,7 +250,7 @@ class MiniAppManager(
     ) {
         netAdapter.reqHttpGetOnBDC(Origin.LOCAL, url, emptyMap(),
             object : NetworkAdapter.HttpRequestCallback {
-                override fun onSendStatus(statusCode: Int, errorCode: Int) {
+                override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                     LogUtil.d("Get application list, status=$statusCode, err=$errorCode")
                 }
 
@@ -259,13 +260,14 @@ class MiniAppManager(
                     headers: MutableMap<String, String>?,
                     body: ByteArray?
                 ) {
-                    LogUtil.i("Get application list, status=$status")
+                    LogUtil.i("Get application list, status=$status, bodyLen=${body?.size}")
                     if (status == NetworkAdapter.STATUS_CODE_OK) {
                         if(body != null){
                             val strBody = String(body)
-                            LogUtil.v(
+                            LogUtil.d(
                                 "Get application list, message back " +
-                                        "status=$status, msg=$msg, headers=$headers"
+                                        "status=$status, msg=$msg, headers=$headers, " +
+                                        "strBody(part)=${strBody.subSequence(0, min(strBody.length, 1024))}"
                             )
                             callback.onResult(Results.success(strBody))
                         }
@@ -320,7 +322,7 @@ class MiniAppManager(
                 headers["If-None-Match"] = localVer
                 // download
                 netAdapter.reqHttpGetOnBDC(origin, urlWithVer, headers,object : NetworkAdapter.HttpRequestCallback {
-                    override fun onSendStatus(statusCode: Int, errorCode: Int) {
+                    override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                         LogUtil.d(
                             "Get application, appId=$appId, " +
                                     "statusCode=$statusCode, errCode=$errorCode"
