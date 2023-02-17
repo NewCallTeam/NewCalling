@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.cmcc.newcalllib">
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!--录制屏幕：前台应用权限-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--录制屏幕：悬浮窗权限-->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <!-- 粗略的位置权限 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 精确的位置权限 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- MTK Service permission -->
+    <queries>
+        <package android:name="com.cmcc.dcservice" />
+    </queries>
+    <uses-permission android:name="com.cmcc.dcservice.bind" />
+
+    <application>
+        <activity android:name=".InjectFragmentActivity"
+            android:theme="@style/Base.Theme.NoActionBar">
+
+        </activity>
+
+<!--        <provider-->
+<!--            android:name="androidx.core.content.FileProvider"-->
+<!--            android:authorities="com.cmcc.newcalllib.fileProvider"-->
+<!--            android:exported="false"-->
+<!--            android:grantUriPermissions="true">-->
+<!--            <meta-data-->
+<!--                android:name="android.support.FILE_PROVIDER_PATHS"-->
+<!--                android:resource="@xml/file_paths" />-->
+<!--        </provider>-->
+    </application>
+</manifest>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--基本色-->
+    <color name="trans">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="red">#FF0000</color>
+    <color name="gray">#808080</color>
+    <color name="green">#008000</color>
+    <color name="gainsboro">#DCDCDC</color>
+    <color name="lightgray">#D3D3D3</color>
+    <color name="holo_red_light">#ffff4444</color>
+    <color name="holo_blue_dark">#ff0099cc</color>
+    <!--半透色-->
+    <color name="black_alpha_10">#19000000</color>
+    <color name="black_alpha_20">#33000000</color>
+    <color name="black_alpha_30">#4c000000</color>
+    <color name="black_alpha_40">#66000000</color>
+    <color name="black_alpha_50">#7f000000</color>
+    <color name="black_alpha_60">#99000000</color>
+    <color name="black_alpha_70">#b2000000</color>
+    <color name="black_alpha_80">#cc000000</color>
+    <color name="white_alpha_10">#19ffffff</color>
+    <color name="white_alpha_30">#4cffffff</color>
+    <color name="white_alpha_50">#7fffffff</color>
+    <color name="white_alpha_60">#99ffffff</color>
+    <color name="white_alpha_80">#ccffffff</color>
+    <color name="white_alpha_90">#e5ffffff</color>
+    <!--字体颜色-->
+    <color name="title_color">#333333</color>
+    <color name="second_title_color">#4a4a4a</color>
+    <color name="body_color">#656565</color>
+    <color name="content_color">#9b9b9b</color>
+    <color name="hint_color">#d8d8d8</color>
+
+</resources>

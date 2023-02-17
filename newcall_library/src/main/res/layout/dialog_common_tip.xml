@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/dialog_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/mgs_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:textColor="#333333"
+        android:text="title" />
+
+    <TextView
+        android:id="@+id/mgs_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:text="content"
+        android:textColor="#9b9b9b" />
+
+    <View
+        android:id="@+id/line_id"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginTop="20dp"
+        android:background="#eeeeee" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dip">
+
+        <View
+            android:id="@+id/line_id2"
+            android:layout_width="1px"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:background="#eeeeee" />
+
+        <TextView
+            android:id="@+id/cancel_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/line_id2"
+            android:background="@drawable/dialog_tv_selector_left"
+            android:gravity="center"
+            android:text="@string/dialog_cancel"
+            android:textSize="16sp"
+            android:textColor="@color/content_color" />
+
+        <TextView
+            android:id="@+id/ok_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/line_id2"
+            android:background="@drawable/dialog_tv_selector_right"
+            android:gravity="center"
+            android:text="@string/dialog_sure"
+            android:textSize="16sp"
+            android:textColor="@color/holo_blue_dark" />
+
+    </RelativeLayout>
+
+</LinearLayout>

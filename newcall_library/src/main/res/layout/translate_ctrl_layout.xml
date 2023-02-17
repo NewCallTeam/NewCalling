@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="11dp"
+        android:layout_marginRight="11dp"
+        android:background="@drawable/translate_ctrl_bg_shape"
+        android:orientation="horizontal"
+        android:padding="18dp"
+        android:paddingLeft="11dp"
+        android:paddingTop="16dp"
+        android:paddingRight="11dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/translate_content_eng_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:lineSpacingExtra="9dp"
+            android:maxLines="3"
+            android:paddingBottom="12dp"
+            android:text="Nice to meet you"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/translate_content_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/translate_content_eng_tv"
+            android:ellipsize="end"
+            android:lineSpacingExtra="9dp"
+            android:maxLines="3"
+            android:text="你好，你那边天气怎样？我这边刚刚下过一场雨，气温也降低了，注意保暖哈。你好，你那边天气怎样？"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/translate_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/translate_content_tv"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="16dp"
+            android:text="11：50"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+
+    </RelativeLayout>
+</RelativeLayout>

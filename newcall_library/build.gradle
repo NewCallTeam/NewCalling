@@ -1,0 +1,142 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'com.kezong.fat-aar'
+
+android {
+
+    compileSdkVersion  rootProject.ext.compileSdkVersion
+    buildToolsVersion  rootProject.ext.buildToolsVersion
+
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    lintOptions {
+        abortOnError false
+    }
+
+    flavorDimensions "vendor"
+    productFlavors {
+        Qcom {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"com.cmcc.action.ims.datachannel\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"");
+
+        }
+
+        Mtk {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"BIND_SERVICE\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"")
+        }
+
+        Samsung {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"com.cmcc.dcservice\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.shannon.imsservice\"")
+        }
+
+        Spreadtrum {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"com.unisoc.ims.ImsDataChannelService\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.spreadtrum.ims\"")
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    //for Android Test case.
+    packagingOptions {
+        exclude 'org/apache/commons/codec/language/*'
+        exclude 'org/apache/commons/codec/language/bm/*'
+    }
+
+}
+
+fataar {
+    /**
+     * If transitive is true, local jar module and remote library's dependencies will be embed. (local aar module does not support)
+     * If transitive is false, just embed first level dependency
+     * Default value is false
+     * @since 1.3.0
+     */
+    transitive = false
+}
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    implementation "androidx.core:core-ktx:1.3.2"
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
+
+    // jars
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    // gson
+    implementation 'com.google.code.gson:gson:2.8.6'
+    // bolts
+    implementation 'com.parse.bolts:bolts-tasks:1.4.0'
+    // room
+    api "androidx.room:room-runtime:2.4.2"
+    annotationProcessor "androidx.room:room-compiler:2.4.2"
+    kapt("androidx.room:room-compiler:2.4.2")
+    // okhttp
+    implementation "com.squareup.okio:okio:2.8.0"
+    // dc aidl接口
+    embed (name: 'newcall_dc_aidl-release', ext: 'aar')
+    api (name: 'newcall_dc_aidl-release', ext: 'aar')
+
+    // http stack for ims dc.
+    embed(name: 'newcall_dc_httpstack-release', ext: 'aar')
+    api(name: 'newcall_dc_httpstack-release', ext: 'aar')
+
+    // dc 涂鸦
+    embed (name: 'newcall_sketch-release', ext: 'aar')
+    api (name: 'newcall_sketch-release', ext: 'aar')
+
+    implementation "com.github.bumptech.glide:glide:4.12.0"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+    // PictureSelector 基础 (必须)
+    implementation 'io.github.lucksiege:pictureselector:v3.10.7'
+    implementation 'io.github.lucksiege:camerax:v3.10.7'
+
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.cmcc.newcalllib.adapter.screenshare.widget.SketchCtrlLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/sketch_ctrl_height"
+        android:background="@drawable/sketch_ctrl_bg_shape"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/exit_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/sketch_ctrl_exit_selector" />
+
+        <ImageView
+            android:id="@+id/sketch_drawing_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/sketch_ctrl_drawing_selector" />
+    </LinearLayout>
+</com.cmcc.newcalllib.adapter.screenshare.widget.SketchCtrlLayout>
