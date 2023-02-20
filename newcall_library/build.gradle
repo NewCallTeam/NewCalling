@@ -5,8 +5,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.kezong.fat-aar'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion  rootProject.ext.compileSdkVersion
+    buildToolsVersion  rootProject.ext.buildToolsVersion
 
 
     defaultConfig {
@@ -128,14 +128,14 @@ dependencies {
     implementation 'io.github.lucksiege:camerax:v3.10.7'
     // dc
     // dc aidl接口
-    embed(name: 'newcall_dc_aidl-release', ext: 'aar')
-    api(name: 'newcall_dc_aidl-release', ext: 'aar')
+    embed (name: 'newcall_dc_aidl-release', ext: 'aar')
+    api (name: 'newcall_dc_aidl-release', ext: 'aar')
     // dc: http stack for ims dc.
     embed(name: 'newcall_dc_httpstack-release', ext: 'aar')
     api(name: 'newcall_dc_httpstack-release', ext: 'aar')
     // dc: 涂鸦
-    embed(name: 'newcall_sketch-release', ext: 'aar')
-    api(name: 'newcall_sketch-release', ext: 'aar')
+    embed (name: 'newcall_sketch-release', ext: 'aar')
+    api (name: 'newcall_sketch-release', ext: 'aar')
 }
 
 //// 通过 jitpack 引用AwesomeNewCall
@@ -155,12 +155,9 @@ afterEvaluate {
 
     publishing {
         publications {
-            def flavorBuild = 'Spreadtrum'
+            def flavorBuild ='Spreadtrum'
             android.libraryVariants.all { variant ->
                 "maven${variant.name.capitalize()}Aar"(MavenPublication) {
-                    if (variant.name.toLowerCase().contains("debug")) {
-                        return
-                    }
                     from components.findByName("android${variant.name.capitalize()}")
                     groupId = 'com.github.NewCallTeam'
                     artifactId = 'AwesomeNewCall'
@@ -179,7 +176,7 @@ afterEvaluate {
                 }
             }
         }
-        repositories {
+        repositories{
             maven {
                 url "$buildDir/repo"
             }
