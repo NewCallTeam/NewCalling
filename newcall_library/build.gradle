@@ -138,7 +138,7 @@ dependencies {
     api (name: 'newcall_sketch-release', ext: 'aar')
 }
 
-//// 通过 jitpack 引用AwesomeNewCall
+// 通过 jitpack 引用AwesomeNewCall
 //allprojects {
 //    repositories {
 //        google()
@@ -152,53 +152,39 @@ dependencies {
 
 // maven-publish 配置
 afterEvaluate {
-
-    publishing {
-        publications {
-            def flavorBuild ='Spreadtrum'
-            android.libraryVariants.all { variant ->
-                "maven${variant.name.capitalize()}Aar"(MavenPublication) {
-                    from components.findByName("android${variant.name.capitalize()}")
-                    groupId = 'com.github.NewCallTeam'
-                    artifactId = 'AwesomeNewCall'
-                    version "master-SNAPSHOT"
-                    artifact "$buildDir/outputs/aar/${project.name}-${flavorBuild}-release.aar"
-
-                    pom.withXml {
-                        def dependenciesNode = asNode().appendNode('dependencies')
-                        configurations.api.allDependencies.each { dependency ->
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', dependency.group)
-                            dependencyNode.appendNode('artifactId', dependency.name)
-                            dependencyNode.appendNode('version', dependency.version)
-                        }
-                    }
-                }
-            }
-        }
-        repositories{
-            maven {
-                url "$buildDir/repo"
+    publishing{
+        publications{
+            // Creates a Maven publication called "release".
+            productionRelease(MavenPublication) {
+                // 发布后按如下方式使用
+                // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
+                groupId = 'com.github.NewCallTeam'
+                artifactId = 'AwesomeNewCall'
+                version = 'master-SNAPSHOT'
+                // 可以指定上传的AAR包
+                //artifact "$buildDir/outputs/aar/${project.name}-Spreadtrum-release.aar"
             }
         }
     }
+    repositories {
+        mavenLocal()
+    }
+}
+// maven-publish multi-flavor 配置
+if (android.productFlavors.size() > 0) {
+    android.libraryVariants.all { variant ->
+        if (variant.name.toLowerCase().contains("debug")) {
+            return
+        }
+        def bundleTask = tasks["bundle${variant.name.capitalize()}Aar"]
 
-//    if (android.productFlavors.size() > 0) {
-//        android.libraryVariants.all { variant ->
-//            if (variant.name.toLowerCase().contains("debug")) {
-//                return
-//            }
-//
-//            def bundleTask = tasks["bundle${variant.name.capitalize()}"]
-//
-//            artifacts {
-//                archives(bundleTask.archivePath) {
-//                    classifier variant.flavorName
-//                    builtBy bundleTask
-//                    name = project.name
-//                }
-//            }
-//
-//        }
-//    }
+        artifacts {
+            archives(bundleTask.archivePath) {
+                classifier variant.flavorName
+                builtBy bundleTask
+                name = project.name
+            }
+        }
+
+    }
 }
