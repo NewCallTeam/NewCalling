@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'maven-publish'
+apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.kezong.fat-aar'
 
 android {
@@ -138,38 +138,6 @@ dependencies {
     api (name: 'newcall_sketch-release', ext: 'aar')
 }
 
-// 通过 jitpack 引用AwesomeNewCall
-//allprojects {
-//    repositories {
-//        google()
-//        jcenter()
-//        maven { url "https://jitpack.io" }
-//    }
-//    dependencies {
-//        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
-//    }
-//}
-
-// maven-publish 配置
-afterEvaluate {
-    publishing{
-        publications{
-            // Creates a Maven publication called "release".
-            productionRelease(MavenPublication) {
-                // 发布后按如下方式使用
-                // implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
-                groupId = 'com.github.NewCallTeam'
-                artifactId = 'AwesomeNewCall'
-                version = 'master-SNAPSHOT'
-                // 可以指定上传的AAR包
-                //artifact "$buildDir/outputs/aar/${project.name}-Spreadtrum-release.aar"
-            }
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
 // maven-publish multi-flavor 配置
 if (android.productFlavors.size() > 0) {
     android.libraryVariants.all { variant ->
@@ -185,6 +153,17 @@ if (android.productFlavors.size() > 0) {
                 name = project.name
             }
         }
-
     }
 }
+
+// 通过 jitpack 引用AwesomeNewCall
+//allprojects {
+//    repositories {
+//        google()
+//        jcenter()
+//        maven { url "https://jitpack.io" }
+//    }
+//    dependencies {
+//        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT'
+//    }
+//}
