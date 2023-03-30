@@ -16,6 +16,9 @@
 
 package com.cmcc.newcalllib.adapter.network
 
+import com.cmcc.newcalllib.manage.support.storage.db.MiniApp
+import com.cmcc.newcalllib.tool.LogUtil
+
 /**
  * @author jihongfei
  * @createTime 2022/11/15 11:10
@@ -46,6 +49,29 @@ class LabelDecoratorImpl: LabelDecorator {
             }
         }
         return label
+    }
+
+    override fun addOrigins(minApps: List<MiniApp>, labels: List<String>): List<String> {
+        val ret: MutableList<String> = mutableListOf()
+        labels.forEach { label ->
+            if (label.isNotEmpty()) {
+                val arr = label.split(DELIMITER)
+                if (arr.size == 4) {
+                    ret.add(label)
+                } else if (arr.size == 3) {
+                    // label contains appId
+                    val index = minApps.indexOfFirst { it.appId == arr[0] }
+                    if (index == -1) {
+                        ret.add(label)
+                    } else {
+                        val newLabel = "${minApps[index].origin}$DELIMITER$label"
+                        LogUtil.d("decorate dcLabel: $label -> $newLabel")
+                        ret.add(newLabel)
+                    }
+                }
+            }
+        }
+        return ret
     }
 
     override fun removeOrigin(label: String): String {

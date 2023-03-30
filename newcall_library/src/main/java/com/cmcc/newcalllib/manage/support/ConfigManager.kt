@@ -7,10 +7,9 @@ import com.cmcc.newcalllib.manage.entity.WebViewSize
  * Configuration store and management
  */
 object ConfigManager {
-    var alwaysDownloadMiniApp = true
-    var webViewSize = WebViewSize(0, 0)
+    var alwaysDownloadMiniApp = BuildConfig.DEBUG
 
-    var dcServiceAction = BuildConfig.ACTION_NAME;
-    var dcServicePackage = BuildConfig.PACKAGE_NAME;
+    var dcServiceAction = BuildConfig.ACTION_NAME
+    var dcServicePackage = BuildConfig.PACKAGE_NAME
     var dcBufferAmountSize: Long = BuildConfig.CHUNK_SIZE
 }

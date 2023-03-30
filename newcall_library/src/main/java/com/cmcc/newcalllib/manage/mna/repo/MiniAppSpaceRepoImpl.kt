@@ -1,8 +1,10 @@
 package com.cmcc.newcalllib.manage.mna.repo
 
+import com.cmcc.newcalllib.manage.entity.Results
 import com.cmcc.newcalllib.manage.support.Callback
 import com.cmcc.newcalllib.manage.support.PathManager
 import com.cmcc.newcalllib.manage.support.storage.SpUtil
+import com.cmcc.newcalllib.tool.LogUtil
 import com.cmcc.newcalllib.tool.thread.ThreadPoolUtil
 import java.io.File
 import java.io.FileOutputStream
@@ -25,14 +27,9 @@ class MiniAppSpaceRepoImpl(
     }
 
     override fun checkFilesExists(appId: String, paths: List<String>): Map<String, Boolean> {
-        val ps = mPathManager?.getMiniAppPrivateSpace(appId)
         val ret = mutableMapOf<String, Boolean>()
         paths.forEach {
-            if (ps == null) {
-                ret[it] = false
-            } else {
-                ret[it] = File(ps, it).exists()
-            }
+            ret[it] = File(it).exists()
         }
         return ret
     }
@@ -66,15 +63,17 @@ class MiniAppSpaceRepoImpl(
                           path: String?,
                           contentType: String,
                           byteArray: ByteArray,
-                          callback: Callback<Result<String>>) {
+                          callback: Callback<Results<String>>) {
         val ps = mPathManager?.getMiniAppPrivateSpace(appId)
+        LogUtil.d("saveFile, path=$path, space=${ps?.path}")
         ThreadPoolUtil.runOnIOThread({
             val dest = File(ps, path ?: "")
+            LogUtil.d("saveFile, dest=${dest.path}")
             FileOutputStream(dest).write(byteArray)
             dest.path
         }, {
             ThreadPoolUtil.runOnUiThread {
-                callback.onResult(Result.success(it))
+                callback.onResult(Results.success(it))
             }
         })
     }

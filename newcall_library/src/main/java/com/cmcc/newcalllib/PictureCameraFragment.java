@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
+
 package com.cmcc.newcalllib;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,7 +61,7 @@ public class PictureCameraFragment extends Fragment implements IObtainCameraView
      * PermissionResultCallback
      */
     private PermissionResultCallback mPermissionResultCallback;
-    private CameraFragmentListener mFragmentListener;
+    private FragmentListener mFragmentListener;
 
     public PictureCameraFragment() {
         // Required empty public constructor
@@ -155,7 +160,7 @@ public class PictureCameraFragment extends Fragment implements IObtainCameraView
         }
     }
 
-    public void setFragmentListener(CameraFragmentListener fragmentListener) {
+    public void setFragmentListener(FragmentListener fragmentListener) {
         mFragmentListener = fragmentListener;
     }
 

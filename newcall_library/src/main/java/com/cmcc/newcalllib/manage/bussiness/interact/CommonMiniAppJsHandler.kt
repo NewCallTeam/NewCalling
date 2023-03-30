@@ -1,21 +1,18 @@
 package com.cmcc.newcalllib.manage.bussiness.interact
 
 import android.net.Uri
-import com.cmcc.newcalllib.adapter.network.ImsDCNetworkAdapter
+import com.cmcc.newcalllib.BuildConfig
 import com.cmcc.newcalllib.adapter.network.NetworkAdapter
 import com.cmcc.newcalllib.bridge.CallBackFunction
-import com.cmcc.newcalllib.manage.support.Callback
 import com.cmcc.newcalllib.manage.entity.CallInfo
+import com.cmcc.newcalllib.manage.entity.NewCallException
 import com.cmcc.newcalllib.manage.entity.Results
 import com.cmcc.newcalllib.manage.entity.handler.req.*
 import com.cmcc.newcalllib.manage.entity.handler.resp.*
-import com.cmcc.newcalllib.manage.support.ConfigManager
+import com.cmcc.newcalllib.manage.support.Callback
 import com.cmcc.newcalllib.manage.support.storage.db.MiniApp
-import com.cmcc.newcalllib.tool.DisplayHelper
-import com.cmcc.newcalllib.tool.FileUtil
-import com.cmcc.newcalllib.tool.LogUtil
+import com.cmcc.newcalllib.tool.*
 import com.cmcc.newcalllib.tool.constant.ErrorCode
-import com.cmcc.newcalllib.tool.toResult
 import java.io.File
 import java.util.*
 
@@ -27,6 +24,8 @@ import java.util.*
 @Suppress("CascadeIf")
 class CommonMiniAppJsHandler : BaseJsHandler() {
     companion object {
+        const val ENABLE_ORIGIN_DECORATE = false
+
         const val GET_INFO = "getInfo"
         const val SAVE_DATA = "saveData"
         const val GET_DATA = "getData"
@@ -55,6 +54,7 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
         const val DELETE_RESOURCE = "deleteResource"
         const val LOAD_AR_RESOURCE = "loadARResource"
         const val CONTROL_STT = "controlSTT"
+        const val CONTROL_COMPRESS = "controlCompress"
     }
 
     private val mRegFuncNames = mutableListOf(
@@ -85,7 +85,8 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
         CHECK_RESOURCE,
         DELETE_RESOURCE,
         LOAD_AR_RESOURCE,
-        CONTROL_STT
+        CONTROL_STT,
+        CONTROL_COMPRESS
     )
 
     override fun getJsHandlerType(): Int {
@@ -154,7 +155,8 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                                         localnumber = info.localNumber,
                                         remotenumber = info.remoteNumber,
                                         callstatus = info.callStatus,
-                                        ismo = info.direction == CallInfo.DIRECTION_OUTGOING
+                                        ismo = info.direction == CallInfo.DIRECTION_OUTGOING,
+                                        callType = getJsCommunicator().theCallType,
                                     )
                                 )
                             )
@@ -168,9 +170,10 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                                         //host = ConfigManager.host,
                                         screenWidth = DisplayHelper.getWidth(),
                                         screenHeight = DisplayHelper.getHeight(),
-                                        webViewWidth = ConfigManager.webViewSize.width,
-                                        webViewHeight = ConfigManager.webViewSize.height,
-                                        webViewLifeCycleState = getJsCommunicator().wvLifeCycleState
+//                                        webViewWidth = getJsCommunicator().webViewWidth,
+//                                        webViewHeight = getJsCommunicator().webViewHeight,
+                                        webViewVisibility = getJsCommunicator().webViewVisibility,
+                                        sdkVersion = BuildConfig.VERSION_NAME
                                     )
                                 )
                             )
@@ -261,7 +264,7 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                         LogUtil.e("appId is empty")
                         invokeCallback(cbFromJs, ErrorCode.ARGUMENTS_ILLEGAL)
                     } else {
-                        sendRequestSizeEvent(r.w, r.h, r.visibility)
+                        sendRequestSizeEvent(r.w, r.h, r.visibility, r.horizontalPos, r.verticalPos)
                         invokeCallback(cbFromJs, ResponseData<Any>(result = 1))
                     }
                 }
@@ -352,46 +355,38 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                     invokeCallback(cbFromJs, ErrorCode.JSON_PARSE_WRONG)
                 } else {
                     val callInfo = getJsCommunicator().callInfo
-                    val newDcLabels = decorateLabels(r.dclabels)
-                    getJsCommunicator().networkAdapter.createDataChannel(
-                        newDcLabels,
-                        r.description,
-                        callInfo.slotId,
-                        callInfo.callId,
-                        object : Callback<Results<Pair<String, Int>>> {
-                            override fun onResult(t: Results<Pair<String, Int>>) {
-                                if (t.isSuccess()) {
-                                    if (t.value().second == ImsDCNetworkAdapter.CREATE_DC_SUCCESS) {
+                    decorateLabels(r.dclabels) { newDcLabels ->
+                        LogUtil.d("createDC newDcLabels=${Arrays.toString(newDcLabels.toTypedArray())}")
+                        getJsCommunicator().networkAdapter.createDataChannel(
+                            newDcLabels,
+                            r.description,
+                            callInfo.slotId,
+                            callInfo.callId,
+                            object : Callback<Results<Map<String, Int?>>> {
+                                override fun onResult(t: Results<Map<String, Int?>>) {
+                                    if (t.isSuccess()) {
+                                        val labelDecorator =
+                                            getJsCommunicator().networkAdapter.getLabelDecorator()
+//                                        val cleanLabel = labelDecorator.removeOrigin(t.value().first)
                                         invokeCallback(
                                             cbFromJs,
                                             ResponseData<Any>(
                                                 result = 1,
-                                                data = RespCreateOrCloseDC(t.value().first)
-                                            )
-                                        )
-                                    } else if (t.value().second == ImsDCNetworkAdapter.CREATE_DC_ALREADY) {
-                                        invokeCallback(
-                                            cbFromJs,
-                                            ResponseData<Any>(
-                                                result = -1,
-                                                data = RespCreateOrCloseDC(t.value().first)
+                                                data = RespCreateOrCloseDC(t.value?.map {
+                                                    RespCreateOrCloseDC.CreateOrCloseDCDetail(
+                                                        label = it.key,
+                                                        result = it.value!!
+                                                    )
+                                                }!!)
                                             )
                                         )
                                     } else {
-                                        invokeCallback(
-                                            cbFromJs,
-                                            ResponseData<Any>(
-                                                result = 0,
-                                                data = RespCreateOrCloseDC(t.value().first)
-                                            )
-                                        )
+                                        invokeCallback(cbFromJs, ResponseData<Any>(result = 0, message = "DC create fail"))
                                     }
-                                } else {
-                                    invokeCallback(cbFromJs, ResponseData<Any>(result = 0, message = "DC create fail"))
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
             CLOSE_APP_DATA_CHANNEL -> {
@@ -400,45 +395,37 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                     invokeCallback(cbFromJs, ErrorCode.JSON_PARSE_WRONG)
                 } else {
                     val callInfo = getJsCommunicator().callInfo
-                    val newDcLabels = decorateLabels(r.dclabels)
-                    getJsCommunicator().networkAdapter.closeDataChannel(
-                        newDcLabels,
-                        callInfo.slotId,
-                        callInfo.callId,
-                        object : Callback<Results<Pair<String, Int>>> {
-                            override fun onResult(t: Results<Pair<String, Int>>) {
-                                if (t.isSuccess()) {
-                                    if (t.value().second == ImsDCNetworkAdapter.CLOSE_DC_SUCCESS) {
+                    decorateLabels(r.dclabels) { newDcLabels ->
+                        getJsCommunicator().networkAdapter.closeDataChannel(
+                            newDcLabels,
+                            callInfo.slotId,
+                            callInfo.callId,
+                            object : Callback<Results<Map<String, Int>>> {
+                                override fun onResult(t: Results<Map<String, Int>>) {
+                                    if (t.isSuccess()) {
+                                        val labelDecorator =
+                                            getJsCommunicator().networkAdapter.getLabelDecorator()
+//                                        val cleanLabel = labelDecorator.removeOrigin(t.value().first)
                                         invokeCallback(
                                             cbFromJs,
                                             ResponseData<Any>(
                                                 result = 1,
-                                                data = RespCreateOrCloseDC(t.value().first)
-                                            )
-                                        )
-                                    } else if (t.value().second == ImsDCNetworkAdapter.CLOSE_DC_ALREADY) {
-                                        invokeCallback(
-                                            cbFromJs,
-                                            ResponseData<Any>(
-                                                result = -1,
-                                                data = RespCreateOrCloseDC(t.value().first)
+                                                data = RespCreateOrCloseDC(t.value?.map {
+                                                    RespCreateOrCloseDC.CreateOrCloseDCDetail(
+                                                        label = it.key,
+                                                        result = it.value
+                                                    )
+                                                }!!)
                                             )
                                         )
                                     } else {
-                                        invokeCallback(
-                                            cbFromJs,
-                                            ResponseData<Any>(
-                                                result = 0,
-                                                data = RespCreateOrCloseDC(t.value().first)
-                                            )
-                                        )
+                                        invokeCallback(cbFromJs, ResponseData<Any>(result = 0, message = "DC close fail"))
                                     }
-                                } else {
-                                    invokeCallback(cbFromJs, ResponseData<Any>(result = 0, message = "DC close fail"))
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
+
                 }
             }
             SEND_DATA -> {
@@ -446,76 +433,95 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                 if (r == null) {
                     invokeCallback(cbFromJs, ErrorCode.JSON_PARSE_WRONG)
                 } else {
-                    val newLabel = decorateLabels(Collections.singletonList(r.dclabel)).single()
-                    getJsCommunicator().networkAdapter.sendDataOverAppDc(newLabel, r.data,
-                        object : NetworkAdapter.RequestCallback {
-                            override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
-                                LogUtil.d("SendData statusCode=$statusCode, errCode=$errorCode")
-                                invokeCallback(cbFromJs, ResponseData<Any>(statuscode = statusCode))
-                            }
-                        })
+                    decorateLabels(Collections.singletonList(r.dclabel)) { newDcLabels ->
+                        val newLabel = newDcLabels.single()
+                        LogUtil.d("sendData newDcLabels=${newLabel}")
+                        getJsCommunicator().networkAdapter.sendDataOnAppDC(newLabel, r.data,
+                            object : NetworkAdapter.RequestCallback {
+                                override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
+                                    LogUtil.d("SendData statusCode=$statusCode, errCode=$errorCode")
+                                    invokeCallback(cbFromJs, ResponseData<Any>(statuscode = statusCode, result = statusCode))
+                                }
+                            })
+                    }
+
                 }
             }
             SEND_HTTP -> {
-                val r = parseRequest(dataFromJs, ReqSendData::class.java)
+                val r = parseRequest(dataFromJs, ReqSendHttp::class.java)
                 if (r == null) {
                     invokeCallback(cbFromJs, ErrorCode.JSON_PARSE_WRONG)
                 } else {
-                    getJsCommunicator().networkAdapter.sendHttpGet(r.dclabel, "", emptyMap(),
-                        object : NetworkAdapter.HttpRequestCallback {
-                            override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
-                                LogUtil.d("sendHttp statusCode=$statusCode, errCode=$errorCode")
-                                invokeCallback(cbFromJs, ResponseData<Any>(statuscode = statusCode))
-                            }
-
-                            override fun onMessageCallback(
-                                status: Int,
-                                msg: String,
-                                headers: MutableMap<String, String>?,
-                                body: ByteArray?
-                            ) {
-                                val currAppId = getCurrentAppId()
-                                val ct = headers?.get("Content-Type")
-                                val cd = headers?.get("Content-Disposition")
-                                val isFile = FileUtil.isFileContentType(ct)
-                                var fileName =
-                                    FileUtil.extractFileNameInContentPosition(cd)
-                                if (fileName == null) {
-                                    fileName = FileUtil.genRandomFileName()
+                    decorateLabels(Collections.singletonList(r.dclabel)) { newDcLabels ->
+                        val newLabel = newDcLabels.single()
+                        LogUtil.d("sendHttp newDcLabels=${newLabel}")
+                        LogUtil.d("sendHttp headers=${r.headers?.entries?.joinToString()}")
+                        getJsCommunicator().networkAdapter.sendHttpOnDC(newLabel, r.url, r.headers,
+                            object : NetworkAdapter.HttpRequestCallback {
+                                override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
+                                    LogUtil.d("sendHttp statusCode=$statusCode, errCode=$errorCode")
                                 }
-                                if (currAppId != null && ct != null && isFile) {
-                                    getJsCommunicator().miniAppManager
-                                        .saveFile(currAppId, fileName, ct, body!!, object: Callback<Result<String>> {
-                                            override fun onResult(t: Result<String>) {
-                                                invokeCallback(
-                                                    cbFromJs, ResponseData<Any>(statuscode = status, result = 1,
-                                                        data = RespSendHttp(
-                                                            status,
-                                                            msg,
-                                                            headers,
-                                                            isFile,
-                                                            t.getOrNull()
+
+                                override fun onMessageCallback(
+                                    status: Int,
+                                    msg: String,
+                                    headers: MutableMap<String, String>?,
+                                    body: ByteArray?
+                                ) {
+                                    LogUtil.d("sendHttp onMessageCallback status=$status")
+                                    val currAppId = getCurrentAppId()
+                                    val ct = headers?.filterKeys {
+                                        it.equals("Content-Type", ignoreCase = true)
+                                    }?.values?.firstOrNull()
+                                    val cd = headers?.filterKeys {
+                                        it.equals("Content-Disposition", ignoreCase = true)
+                                    }?.values?.firstOrNull()
+                                    val isFile = FileUtil.isFileContentType(ct)
+                                    var fileName =
+                                        FileUtil.extractFileNameInContentPosition(cd)
+                                    if (isFile && fileName == null) {
+                                        val ext = FileUtil.getFileExt(ct!!)
+                                        fileName = FileUtil.genRandomFileName(ext)
+                                    }
+                                    LogUtil.d("sendHttp onMessageCallback, contentType=$ct, contentDisposition=$cd, isFile=$isFile")
+                                    if (currAppId != null && ct != null && isFile) {
+                                        LogUtil.d("sendHttp onMessageCallback, saveFile")
+                                        getJsCommunicator().miniAppManager
+                                            .saveFile(currAppId, fileName, ct, body!!, object: Callback<Results<String>> {
+                                                override fun onResult(t: Results<String>) {
+                                                    LogUtil.d("sendHttp onMessageCallback, saveFile res=${t.getOrNull()}")
+                                                    invokeCallback(
+                                                        cbFromJs, ResponseData<Any>(statuscode = status, result = 1,
+                                                            data = RespSendHttp(
+                                                                status,
+                                                                msg,
+                                                                headers,
+                                                                isFile,
+                                                                t.getOrNull()
+                                                            )
                                                         )
                                                     )
+                                                }
+                                            })
+                                    } else {
+                                        LogUtil.d("sendHttp onMessageCallback, invoke with no file")
+                                        invokeCallback(
+                                            cbFromJs, ResponseData<Any>(statuscode = status, result = 1,
+                                                data = RespSendHttp(
+                                                    status,
+                                                    msg,
+                                                    headers,
+                                                    isFile,
+                                                    null
                                                 )
-                                            }
-                                        })
-                                } else {
-                                    invokeCallback(
-                                        cbFromJs, ResponseData<Any>(statuscode = status, result = 1,
-                                            data = RespSendHttp(
-                                                status,
-                                                msg,
-                                                headers,
-                                                isFile,
-                                                null
                                             )
                                         )
-                                    )
+                                    }
                                 }
-                            }
 
-                        })
+                            })
+                    }
+
                 }
             }
             SAVE_TRANSFER_FILE -> {
@@ -622,11 +628,13 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                         getJsCommunicator().extensionManager.getScreenShareManager()
                     // 开启屏幕共享
                     if (r.enable) {
-                        screenShareController.enableScreenShare(r.role, r.dcLabel, object : Callback<Results<Boolean>> {
-                            override fun onResult(t: Results<Boolean>) {
-                                invokeCallback(cbFromJs, ResponseData<Any>(result = t.value.toResult()))
-                            }
-                        })
+                        decorateLabels(Collections.singletonList(r.dcLabel)) { newDcLabels ->
+                            screenShareController.enableScreenShare(r.role, newDcLabels.single(), object : Callback<Results<Boolean>> {
+                                override fun onResult(t: Results<Boolean>) {
+                                    invokeCallback(cbFromJs, ResponseData<Any>(result = t.value.toResult()))
+                                }
+                            })
+                        }
                     }
                     // 关闭屏幕共享
                     else {
@@ -671,14 +679,16 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                         getJsCommunicator().extensionManager.getARManager()
                     val callInfo = getJsCommunicator().callInfo
                     if (r.enable) {
-                        arController.startARCall(r.dcLabels,
-                            callInfo.slotId,
-                            callInfo.callId,
-                            object : Callback<Results<Boolean>> {
-                            override fun onResult(t: Results<Boolean>) {
-                                invokeCallback(cbFromJs, ResponseData<Any>(result = t.value.toResult()))
-                            }
-                        })
+                        decorateLabels(r.dcLabels) { newDcLabels ->
+                            arController.startARCall(newDcLabels,
+                                callInfo.slotId,
+                                callInfo.callId,
+                                object : Callback<Results<Boolean>> {
+                                    override fun onResult(t: Results<Boolean>) {
+                                        invokeCallback(cbFromJs, ResponseData<Any>(result = t.value.toResult()))
+                                    }
+                                })
+                        }
                     } else {
                         arController.stopARCall(
                             callInfo.slotId,
@@ -757,13 +767,15 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                 } else {
                     val sttManager = getJsCommunicator().extensionManager.getSTTManager()
                     if (r.enable) {
-                        sttManager.enableSTT(r.textSize, r.dcLabel, object: Callback<Results<Boolean>> {
-                            override fun onResult(t: Results<Boolean>) {
-                                invokeCallback(cbFromJs, ResponseData<Any>(
-                                    result = t.value.toResult()
-                                ))
-                            }
-                        })
+                        decorateLabels(Collections.singletonList(r.dcLabel)) { newDcLabels ->
+                            sttManager.enableSTT((r.textSize ?: 0), newDcLabels.single(), object: Callback<Results<Boolean>> {
+                                override fun onResult(t: Results<Boolean>) {
+                                    invokeCallback(cbFromJs, ResponseData<Any>(
+                                        result = t.value.toResult()
+                                    ))
+                                }
+                            })
+                        }
                     } else {
                         sttManager.disableSTT(object: Callback<Results<Boolean>> {
                             override fun onResult(t: Results<Boolean>) {
@@ -772,6 +784,53 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                                 ))
                             }
                         })
+                    }
+                }
+            }
+            CONTROL_COMPRESS -> {
+                val r = parseRequest(dataFromJs, ReqControlCompress::class.java)
+                if (r == null) {
+                    invokeCallback(cbFromJs, ErrorCode.JSON_PARSE_WRONG)
+                } else {
+                    if (!File(r.path).exists()) {
+                        invokeCallback(cbFromJs, ErrorCode.FILE_OR_FOLDER_NOT_EXIST)
+                        return true
+                    }
+                    if (!r.compress) {
+                        if (!r.path.endsWith(".zip", true)) {
+                            invokeCallback(cbFromJs, ErrorCode.DECOMPRESS_FILE_FAILED)
+                        } else {
+                            val unZipFilePath =
+                                r.path.substring(0, r.path.lastIndexOf(".zip", r.path.length, true))
+                            val deleteRecursivelyResult = File(unZipFilePath).deleteRecursively()
+                            LogUtil.d("controlCompress, decompress deleteRecursivelyResult = $deleteRecursivelyResult")
+                            ZipUtil.unzip(r.path, unZipFilePath)
+                            invokeCallback(cbFromJs, ResponseData<Any>(
+                                    result = 1,
+                                    data = RespControlCompress(unZipFilePath)
+                                )
+                            )
+                        }
+                    } else {
+                        val file = File(r.path)
+                        val zipFilePath: String
+                        if (file.isDirectory) {
+                            if (file.listFiles().isNullOrEmpty()) {
+                                invokeCallback(cbFromJs, ErrorCode.FOLDER_IS_EMPTY)
+                                return true
+                            }
+                            zipFilePath = "${r.path}.zip"
+                            ZipUtil.zipFilesInFolder(r.path, zipFilePath)
+                        } else {
+                            zipFilePath =
+                                "${r.path.substring(0, r.path.lastIndexOf('.', r.path.length))}.zip"
+                            ZipUtil.zip(listOf(file), zipFilePath)
+                        }
+                        invokeCallback(cbFromJs, ResponseData<Any>(
+                                result = 1,
+                                data = RespControlCompress(zipFilePath)
+                            )
+                        )
                     }
                 }
             }
@@ -786,27 +845,32 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
     /**
      * append origin in start of the given dc label if origin is absent
      */
-    private fun decorateLabels(oldLabels: List<String>): List<String> {
+    private fun decorateLabels(oldLabels: List<String>,
+                               callback: (List<String>) -> Any) {
+        if (!ENABLE_ORIGIN_DECORATE) {
+            callback.invoke(oldLabels)
+            return
+        }
+        LogUtil.d("decorateLabels")
         val labelDecorator = getJsCommunicator().networkAdapter.getLabelDecorator()
-        return oldLabels.map { label ->
-            val parsedAppId = labelDecorator.parseAppId(label)
-            var newLabel = label
-            parsedAppId?.let {
-                getJsCommunicator().miniAppManager.findMiniApp(
-                    it,
-                    object : Callback<Results<MiniApp>> {
-                        override fun onResult(t: Results<MiniApp>) {
-                            if (t.isSuccess()) {
-                                newLabel = labelDecorator.addOrigin(
-                                    t.value().origin,
-                                    label
-                                )
-                                LogUtil.d("decorate dcLabel: $label -> $newLabel")
-                            }
+        val appIds = oldLabels.map { labelDecorator.parseAppId(it) ?: "" }
+        if (appIds.any { it.isEmpty() }) {
+            throw NewCallException("decorate label err on parseAppId")
+        }
+        appIds.let { ids ->
+            getJsCommunicator().miniAppManager.findMiniApp(
+                ids,
+                object : Callback<Results<List<MiniApp>>> {
+                    override fun onResult(t: Results<List<MiniApp>>) {
+                        if (t.isSuccess()) {
+                            val miniApps = t.value()
+                            val newLabels = labelDecorator.addOrigins(miniApps, oldLabels)
+                            callback.invoke(newLabels)
+                        } else {
+                            throw NewCallException("decorate label err on query MNA")
                         }
-                    })
-            }
-            newLabel
-        }.toList()
+                    }
+                })
+        }
     }
 }

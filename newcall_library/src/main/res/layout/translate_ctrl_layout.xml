@@ -6,39 +6,37 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="11dp"
-        android:layout_marginRight="11dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
         android:background="@drawable/translate_ctrl_bg_shape"
         android:orientation="horizontal"
-        android:padding="18dp"
-        android:paddingLeft="11dp"
-        android:paddingTop="16dp"
-        android:paddingRight="11dp"
-        android:paddingBottom="16dp">
+        android:padding="12dp">
 
+        <!--翻译前的内容-->
         <TextView
-            android:id="@+id/translate_content_eng_tv"
+            android:id="@+id/translate_content_source_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:lineSpacingExtra="9dp"
+            android:lineSpacingExtra="3dp"
             android:maxLines="3"
-            android:paddingBottom="12dp"
+            android:paddingBottom="6dp"
             android:text="Nice to meet you"
             android:textColor="@android:color/white"
-            android:textSize="18sp" />
+            android:textSize="19sp" />
 
+        <!--翻译后的内容||识别出的文字-->
         <TextView
             android:id="@+id/translate_content_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/translate_content_eng_tv"
+            android:layout_below="@id/translate_content_source_tv"
             android:ellipsize="end"
-            android:lineSpacingExtra="9dp"
+            android:lineSpacingExtra="3dp"
             android:maxLines="3"
             android:text="你好，你那边天气怎样？我这边刚刚下过一场雨，气温也降低了，注意保暖哈。你好，你那边天气怎样？"
             android:textColor="@android:color/white"
-            android:textSize="18sp" />
+            android:textSize="19sp" />
 
         <TextView
             android:id="@+id/translate_time_tv"
@@ -46,10 +44,10 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/translate_content_tv"
             android:layout_alignParentRight="true"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="10dp"
             android:text="11：50"
             android:textColor="@android:color/white"
-            android:textSize="12sp" />
+            android:textSize="16sp" />
 
     </RelativeLayout>
 </RelativeLayout>

@@ -24,7 +24,7 @@ class HttpAggregator : DataAggregator {
         byteBuffer: ByteBuffer,
         callback: (buffer: ByteBuffer) -> Any
     ) {
-        LogUtil.d("HttpAggregator", "aggregate. subProtocol: $subProtocol dcLabel: $dcLabel byteBuffer: $byteBuffer")
+        LogUtil.d("HttpAggregator: aggregate. subProtocol: $subProtocol dcLabel: $dcLabel byteBuffer: $byteBuffer")
         // 未添加过该dc的返回数据，直接添加数据
         if (!allByteBuffers.containsKey(dcLabel)) {
             // 分配buffer内存空间
@@ -47,12 +47,12 @@ class HttpAggregator : DataAggregator {
                 byteBuffer.capacity()
             )
         }
-        LogUtil.d("HttpAggregator", "aggregate. subProtocol: $subProtocol dcLabel: $dcLabel byteBuffer: $byteBuffer")
         // 数据是否完整
         var complete = HttpStack.verifyHttp1ResponseCompleted(allByteBuffers[dcLabel])
-        LogUtil.d("HttpAggregator", "complete: $complete")
+        LogUtil.d("HttpAggregator: complete: $complete")
         if (complete) {
             allByteBuffers[dcLabel]?.let {
+                LogUtil.d("HttpAggregator: The body is complete! callback data.");
                 // 回调数据
                 callback(it)
                 // 移除缓存数据
@@ -60,6 +60,7 @@ class HttpAggregator : DataAggregator {
             }
         } else {
             // 数据不完整，等待下次数据到来
+            LogUtil.d("HttpAggregator: The body is incomplete! wait for the next data to arrive.")
         }
 
     }

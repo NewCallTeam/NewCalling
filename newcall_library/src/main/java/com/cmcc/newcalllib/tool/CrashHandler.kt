@@ -91,16 +91,17 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
             sb.append("${entry.key}=${entry.value}${System.getProperty("line.separator")}")
         }
 
-        val filewriter = StringWriter()
-        val pWriter = PrintWriter(filewriter)
+        val writer = StringWriter()
+        val printWriter = PrintWriter(writer)
+        throwable.printStackTrace(printWriter)
         var cause = throwable.cause
         while (cause != null) {
-            cause.printStackTrace(pWriter)
+            cause.printStackTrace(printWriter)
             cause = cause.cause
         }
-        pWriter.close()
+        printWriter.close()
 
-        val result = filewriter.toString()
+        val result = writer.toString()
         sb.append(result)
 
         val timestamp = System.currentTimeMillis()

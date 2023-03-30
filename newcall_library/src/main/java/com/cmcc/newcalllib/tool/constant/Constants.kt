@@ -3,6 +3,8 @@ package com.cmcc.newcalllib.tool.constant
 import android.text.TextUtils
 import com.cmcc.newcalllib.BuildConfig
 import com.cmcc.newcalllib.adapter.network.Origin
+import com.cmcc.newcalllib.datachannel.IImsDataChannel
+import com.cmcc.newcalllib.datachannel.ImsDCStatus
 import com.cmcc.newcalllib.tool.LogUtil
 
 class Constants {
@@ -40,24 +42,44 @@ class Constants {
             return label
         }
 
+        fun isBootDc(dc: IImsDataChannel): Boolean {
+            LogUtil.d(
+                "Constants", "isBootDc. dcLabel: ${dc?.dcLabel} " +
+                        " dcStreamId: ${dc?.streamId} dcType: ${dc?.dcType} dcState: ${dc?.state}" +
+                        " dcSubProtocol: ${dc?.subProtocol} dcCallId: ${dc?.callId}" +
+                        " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            )
+            if ("0" == dc?.streamId || "100" == dc?.streamId) {
+                LogUtil.d("ImsDCNetworkAdapter", "isBootDc!!!")
+                return true
+            }
+            LogUtil.d("ImsDCNetworkAdapter", "isAppDc!!!")
+            return false
+        }
+
         /**
          * 获取bdc label
          */
-        fun getBdcLableByStreamId(streamId: String): String {
-            LogUtil.d("getBdcLableByStreamId", "streamId=$streamId")
-            if (TextUtils.isEmpty(streamId)) {
-                return ""
+        fun getDcLable(dc: IImsDataChannel): String {
+            LogUtil.d(
+                "Constants", "getDcLable. dcLabel: ${dc?.dcLabel} " +
+                        " dcStreamId: ${dc?.streamId} dcType: ${dc?.dcType} dcState: ${dc?.state}" +
+                        " dcSubProtocol: ${dc?.subProtocol} dcCallId: ${dc?.callId}" +
+                        " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            )
+            return when (dc?.streamId) {
+                // boot dc
+                "0" -> {
+                    BOOTSTRAP_DATA_CHANNEL_LABEL_LOCAL
+                }
+                "100" -> {
+                    BOOTSTRAP_DATA_CHANNEL_LABEL_REMOTE
+                }
+                // app dc
+                else -> {
+                    dc?.dcLabel
+                }
             }
-            val label = if ("0" == streamId) {
-                BOOTSTRAP_DATA_CHANNEL_LABEL_LOCAL
-            } else if ("100" == streamId) {
-                BOOTSTRAP_DATA_CHANNEL_LABEL_REMOTE
-            } else {
-                ""
-            }
-            return label
         }
-
-
     }
 }

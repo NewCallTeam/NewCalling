@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 China Mobile Communications Group Co.,Ltd. All rights reserved.
+ * Copyright (c) 2023 China Mobile Communications Group Co.,Ltd. All rights reserved.
  *
  * Licensed under the XXXX License, Version X.X (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,97 +16,57 @@
 
 package com.cmcc.newcalllib.adapter.translate.bean;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 
 /**
  * @author xiaxl
  * @createTime 2023/2/1 15:15
  * <p>
- * // contentId: 消息id
- * // contentType: 1 语音转写;  2 实时翻译
- * // time : 当前时间戳
- * // content: 中文内容
- * // contentEng: 要翻译的语言内容
- * {"contentId":"contentId","contentType":2,"content":"你好!","contentEng":"Hello","time":1676448103104}
+ * 接口定义 详见《中国移动智能翻译业务数据交互接口规范》 6.2媒体能力平台数据交互接口
  */
-public class TranslateBean {
 
-    // 注解仅存在于源码中，在class字节码文件中不包含
-    @Retention(RetentionPolicy.SOURCE)
-    // 限定取值范围为{SPEECH_TO_TEXT, SPEECH_TRANSLATION}
-    @IntDef({Type.SPEECH_TO_TEXT, Type.SPEECH_TRANSLATION})
-    public @interface Type {
-        int SPEECH_TO_TEXT = 1; // 语音转写
-        int SPEECH_TRANSLATION = 2; // 实时翻译
+public class TranslateBean implements java.io.Serializable {
+
+    private String innerUrl;
+    private String msgId;
+    private TranslateBodyBean body;
+
+
+    public String getInnerUrl() {
+        return innerUrl;
     }
 
-
-    private String contentId;
-    // 1 语音转写  2 实时翻译
-    private int contentType;
-    private String content;
-    private String contentEng;
-    private long time;
-
-    public String getContentId() {
-        return contentId;
+    public void setInnerUrl(String innerUrl) {
+        this.innerUrl = innerUrl;
     }
 
-    public void setContentId(String contentId) {
-        this.contentId = contentId;
+    public String getMsgId() {
+        return msgId;
     }
 
-    public int getContentType() {
-        return contentType;
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
     }
 
-    public void setContentType(int contentType) {
-        this.contentType = contentType;
+    public TranslateBodyBean getBody() {
+        return body;
     }
 
-    public String getContent() {
-        return content;
+    public void setBody(TranslateBodyBean body) {
+        this.body = body;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContentEng() {
-        return contentEng;
-    }
-
-    public void setContentEng(String contentEng) {
-        this.contentEng = contentEng;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public void setTime(long time) {
-        this.time = time;
-    }
 
     @NonNull
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("contentId: ");
-        sb.append(contentId);
-        sb.append(" contentType: ");
-        sb.append(contentType);
-        sb.append(" content: ");
-        sb.append(content);
-        sb.append(" contentEng: ");
-        sb.append(contentEng);
-        sb.append(" time: ");
-        sb.append(time);
+        sb.append(" innerUrl: ");
+        sb.append(innerUrl);
+        sb.append(" msgId: ");
+        sb.append(msgId);
+        sb.append(" body: ");
+        sb.append(body);
         return sb.toString();
     }
 }

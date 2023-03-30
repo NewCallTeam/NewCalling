@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2022 China Mobile Communications Group Co.,Ltd. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the XXXX License, Version X.X (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  http://xxxxxxx/licenses/LICENSE-X.X
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,8 @@ package com.cmcc.newcalllib.manage.ext.ar
 
 import android.view.Surface
 import com.cmcc.newcalllib.adapter.ar.aidl.ARAdapter
+import com.cmcc.newcalllib.adapter.ar.local.LocalARAdapterImpl
+import com.cmcc.newcalllib.adapter.ar.local.SimpleLocalARCallback
 import com.cmcc.newcalllib.adapter.network.NetworkAdapter
 import com.cmcc.newcalllib.manage.entity.Results
 import com.cmcc.newcalllib.manage.ext.ExtensionManager
@@ -38,7 +40,7 @@ class AugmentedRealityManager(private val extensionManager: ExtensionManager) :
     private var mARInitial = false
     private var mDataChannelLabels = mutableListOf<String>()
     private lateinit var mDataChannelHandler: DataChannelHandlerImpl
-    private val localARAdapter = null/*LocalARAdapterImpl(extensionManager.cxt)*/
+    private val localARAdapter = LocalARAdapterImpl(extensionManager.cxt)
     private val aidlARAdapter = extensionManager.networkAdapter as ARAdapter
 
     override fun isARCallAvailable(callback: Callback<Results<Boolean>>) {
@@ -52,47 +54,47 @@ class AugmentedRealityManager(private val extensionManager: ExtensionManager) :
         if (!mARInitial) {
             init(labels)
         }
-//        if (localARAdapter.checkARAbility()) {
-//            // aidl start
-//            aidlARAdapter.setARCallback(object : ARAdapter.ARCallback {
-//                override fun onGetSurface(surface: Surface, slotId: Int, callId: String) {
-//                    LogUtil.d("onGetSurface")
-//                    // call ar sdk to start
-////                    localARAdapter.startARAbility(surface, object: SimpleLocalARCallback() {
-////                        override fun onStartARCallback(status: Int) {
-////                            LogUtil.d("localARAdapter startARAbility status=$status")
-////                            // TODO check status code
-////                            callback?.onResult(Results.success(true))
-////                        }
-////                    })
-//                }
-//            })
-//            aidlARAdapter.startARAbility(slotId, callId, object : Callback<Results<Int>> {
-//                override fun onResult(t: Results<Int>) {
-//                    LogUtil.d("aidlARAdapter startARAbility onResult, ${t.value}")
-//                }
-//            })
-//        } else {
-//            callback?.onResult(Results.failure("ar ability absent"))
-//        }
+        if (localARAdapter.checkARAbility()) {
+            // aidl start
+            aidlARAdapter.setARCallback(object : ARAdapter.ARCallback {
+                override fun onGetSurface(surface: Surface, slotId: Int, callId: String) {
+                    LogUtil.d("onGetSurface")
+                    // call ar sdk to start
+                    localARAdapter.startARAbility(surface, object: SimpleLocalARCallback() {
+                        override fun onStartARCallback(status: Int) {
+                            LogUtil.d("localARAdapter startARAbility status=$status")
+                            // TODO check status code
+                            callback?.onResult(Results.success(true))
+                        }
+                    })
+                }
+            })
+            aidlARAdapter.startARAbility(slotId, callId, object : Callback<Results<Int>> {
+                override fun onResult(t: Results<Int>) {
+                    LogUtil.d("aidlARAdapter startARAbility onResult, ${t.value}")
+                }
+            })
+        } else {
+            callback?.onResult(Results.failure("ar ability absent"))
+        }
     }
 
     override fun stopARCall(slotId: Int, callId: String, callback: Callback<Results<Boolean>>?) {
         LogUtil.d("stopARCall")
         // call ar sdk to stop
-//        localARAdapter.stopARAbility(object: SimpleLocalARCallback() {
-//            override fun onStopARCallback(status: Int) {
-//                LogUtil.d("localARAdapter stopARAbility status=$status")
-//                // aidl stop
-//                aidlARAdapter.stopARAbility(slotId, callId, object : Callback<Results<Int>> {
-//                    override fun onResult(t: Results<Int>) {
-//                        LogUtil.d("aidlARAdapter stopARAbility onResult, ${t.value}")
-//                        // TODO check status code
-//                        callback?.onResult(Results.success(true))
-//                    }
-//                })
-//            }
-//        })
+        localARAdapter.stopARAbility(object: SimpleLocalARCallback() {
+            override fun onStopARCallback(status: Int) {
+                LogUtil.d("localARAdapter stopARAbility status=$status")
+                // aidl stop
+                aidlARAdapter.stopARAbility(slotId, callId, object : Callback<Results<Int>> {
+                    override fun onResult(t: Results<Int>) {
+                        LogUtil.d("aidlARAdapter stopARAbility onResult, ${t.value}")
+                        // TODO check status code
+                        callback?.onResult(Results.success(true))
+                    }
+                })
+            }
+        })
 
         // state reset
         reset()

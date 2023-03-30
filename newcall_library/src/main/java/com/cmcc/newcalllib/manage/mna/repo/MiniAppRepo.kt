@@ -24,6 +24,11 @@ interface MiniAppRepo {
     fun getLocalMiniAppAsync(appId: String, callback: Callback<MiniApp?>)
 
     /**
+     * query mini-app by appIds in database
+     */
+    fun getLocalMiniAppsAsync(appIds: List<String>, callback: Callback<List<MiniApp>>)
+
+    /**
      * save value with key, in sharedPreference
      */
     fun saveStringInSp(key: String, value: String)

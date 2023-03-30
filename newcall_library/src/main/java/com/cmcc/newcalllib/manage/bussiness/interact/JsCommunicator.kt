@@ -1,6 +1,5 @@
 package com.cmcc.newcalllib.manage.bussiness.interact
 
-import android.text.TextUtils
 import com.cmcc.newcalllib.manage.ext.ExtensionManager
 import com.cmcc.newcalllib.adapter.network.NetworkAdapter
 import com.cmcc.newcalllib.adapter.network.Origin
@@ -22,7 +21,6 @@ import com.cmcc.newcalllib.tool.constant.EventType
 import com.google.gson.JsonParseException
 import java.lang.Exception
 import java.nio.ByteBuffer
-import java.util.ArrayList
 
 /**
  * @author jihongfei
@@ -47,10 +45,14 @@ class JsCommunicator(
         const val JS_FUNC_NAME_MSG_NOTIFY = "messageNotify"
         const val JS_FUNC_NAME_CALLSTATE_NOTIFY = "callStateNotify"
         const val JS_FUNC_NAME_VISIBILITY_NOTIFY = "visibilityNotify"
+        const val JS_FUNC_NAME_CALL_TYPE_NOTIFY = "callTypeNotify"
     }
     private var mBootstrapJsHandler: BootstrapJsHandler? = null
     private var mCommonJsHandler: CommonMiniAppJsHandler? = null
-    var wvLifeCycleState: Int? = null
+    var webViewVisibility: Int? = null
+    var theCallType: Int? = null
+//    var webViewWidth: Int? = null
+//    var webViewHeight: Int? = null
 
     init {
         setupDataObserver()
@@ -64,6 +66,7 @@ class JsCommunicator(
 //            override fun onDataArrive(data: ByteBuffer, protocol: String) {
             override fun onDataArrive(label: String, data: ByteBuffer) {
                 val data = data.toStr()
+//                val cleanLabel = networkAdapter.getLabelDecorator().removeOrigin(label)
                 LogUtil.v("onDataArrive, label:$label, data: $data")
                 messageNotify(label, data, null)
             }
@@ -81,13 +84,12 @@ class JsCommunicator(
             }
 
             override fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int, callId: String) {
-                LogUtil.d("onImsDataChannelSetupRequest, dcLabels=$dcLabels slotId=$slotId")
+                LogUtil.d("onImsDataChannelSetupRequest, dcLabels=${dcLabels.joinToString()} slotId=$slotId")
+//                val cleanDcLabels =
+//                    dcLabels.map { networkAdapter.getLabelDecorator().removeOrigin(it) }
+//                        .toTypedArray()
                 // call dataChannelNotify to JS
-                val cleanDcLabels =
-                    dcLabels.map { networkAdapter.getLabelDecorator().removeOrigin(it) }
-                        .toTypedArray()
-                // call dataChannelNotify to JS
-                dataChannelNotify(cleanDcLabels, object : CallBackFunction {
+                dataChannelNotify(dcLabels, object : CallBackFunction {
                     override fun onCallBack(data: String?) {
                         // 如果是"屏幕共享"，约定此处不会被Js前端回调
                         // （因屏幕共享由SDK实现，并不需要启动小程序，故不执行onCallBack后续代码逻辑）
@@ -125,7 +127,7 @@ class JsCommunicator(
                         // consider dcLabels belongs to one MiniApp.
                         // which means DC here is all from Local or Remote
                         val origin = if (dcLabels.any() { it.startsWith(Origin.LOCAL.getName()) }) Origin.LOCAL else Origin.REMOTE
-                        LogUtil.d("dataChannelNotify callback, r=$r, dcLabels=$dcLabels, " +
+                        LogUtil.d("dataChannelNotify callback, r=$r, dcLabels=${dcLabels.joinToString()}, " +
                                 "acceptArr=$acceptArr, origin=${origin.getName()}")
                         if (slotId >= 0) {
                             networkAdapter.respondDataChannelSetupRequest(
@@ -143,8 +145,8 @@ class JsCommunicator(
                                     if (t.isSuccess() &&(t.getOrNull() != null)) {
                                         val path = t.value()
                                         if (FileUtil.exists(path, false)) {
-                                            // pass dc state by query?
-                                            handler.sendMessageType(EventType.RENDER, EventRender(path, ""))
+                                            // pass origin by query
+                                            handler.sendMessageType(EventType.RENDER, EventRender(path, query = "origin=${origin.getName()}"))
                                         }
                                     } else {
                                         LogUtil.e("Prepare mini-app on dataChannelNotify fail with: $r")
@@ -231,9 +233,15 @@ class JsCommunicator(
     }
 
     fun visibilityNotify(state: Int, cb: CallBackFunction?) {
-        wvLifeCycleState = state
+        webViewVisibility = state
         val vNotify = VisibilityNotify(state)
         callJsFunction(JS_FUNC_NAME_VISIBILITY_NOTIFY, JsonUtil.toJson(vNotify), cb)
+    }
+
+    fun callTypeNotify(callType: Int, cb: CallBackFunction?) {
+        theCallType = callType
+        val callTypeNotify = CallTypeNotify(callType)
+        callJsFunction(JS_FUNC_NAME_CALL_TYPE_NOTIFY, JsonUtil.toJson(callTypeNotify), cb)
     }
 
 }

@@ -1,8 +1,7 @@
 package com.cmcc.newcalllib.manage.mna.repo
 
+import com.cmcc.newcalllib.manage.entity.Results
 import com.cmcc.newcalllib.manage.support.Callback
-import com.cmcc.newcalllib.tool.thread.ThreadPoolUtil
-import java.io.File
 
 /**
  * @author jihongfei
@@ -18,5 +17,5 @@ interface MiniAppSpaceRepo {
                  path: String?,
                  contentType: String,
                  byteArray: ByteArray,
-                 callback: Callback<Result<String>>)
+                 callback: Callback<Results<String>>)
 }

@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Handler
 import android.os.Message
 import com.cmcc.newcalllib.adapter.network.data.NetworkConfig
-import com.cmcc.newcalllib.manage.support.Callback
 import com.cmcc.newcalllib.manage.entity.Results
+import com.cmcc.newcalllib.manage.support.Callback
 import com.cmcc.newcalllib.tool.constant.Constants
 import com.cmcc.newcalllib.tool.constant.ErrorCode
 import com.cmcc.newcalllib.tool.constant.EventType
@@ -57,7 +57,7 @@ abstract class NetworkAdapter(
         dcDescription: String,
         slotId: Int,
         callId: String,
-        callback: Callback<Results<Pair<String, Int>>>?
+        callback: Callback<Results<Map<String, Int?>>>?
     )
 
     /**
@@ -69,7 +69,7 @@ abstract class NetworkAdapter(
         dcLabels: List<String>,
         slotId: Int,
         callId: String,
-        callback: Callback<Results<Pair<String, Int>>>?
+        callback: Callback<Results<Map<String, Int>>>?
     )
 
     /**
@@ -83,58 +83,123 @@ abstract class NetworkAdapter(
     )
 
     /**
-     * bootstrap dc send http request
+     * send http get request through BootStrap DataChannel
+     *
+     * GET /?Terminal_Vendor=UNISOC&Terminal_Model=ums9620_2h10_native HTTP/1.1
+     * If-None-Match: 8790279ffba16de0a7ea673729be2ae6
      */
-    abstract fun sendHttpGet(
-        label: String,
-        url: String,
-        headers: Map<String, String>,
-        callback: HttpRequestCallback
-    )
-
-    /**
-     * bootstrap dc send http request
-     */
-    fun reqHttpGetOnBDC(
+    fun sendHttpOnBootDC(
         origin: Origin,
         url: String,
-        headers: Map<String, String>,
+        headerMap: Map<String, String>?,
         callback: HttpRequestCallback
     ) {
         // 获取 bdc 请求的 label
         val label = Constants.getBdcLableByOrigin(origin)
         // 通过 bdc 发起http请求
-        sendHttpGet(label, url, headers, callback)
+        sendHttpOnDC(label, url, headerMap, callback)
     }
 
     /**
-     * app dc send data directly
+     * send data through APP DataChannel
      */
-    abstract fun sendDataOverAppDc(label: String, data: String, callback: RequestCallback)
-
+    abstract fun sendDataOnAppDC(label: String, data: String, callback: RequestCallback)
 
     /**
-     * app dc send file directly
+     * send http get request through DataChannel
+     *
+     * GET /?Terminal_Vendor=UNISOC&Terminal_Model=ums9620_2h10_native HTTP/1.1
+     * If-None-Match: 8790279ffba16de0a7ea673729be2ae6
      */
-    @Deprecated("this function is deprecated：There is an error in the method implementation！")
-    abstract fun sendFileOverAppDc(label: String, file: File, callback: RequestCallback)
+    fun sendHttpOnDC(
+        label: String,
+        url: String,
+        headerMap: Map<String, String>?,
+        callback: HttpRequestCallback
+    ) {
+        sendHttpOnDC(label, url, headerMap, null, null, callback)
+    }
 
+    /**
+     * send http post request through DataChannel
+     *
+     * POST /?Terminal_Vendor=UNISOC&Terminal_Model=ums9620_2h10_native HTTP/1.1
+     * If-None-Match: 8790279ffba16de0a7ea673729be2ae6
+     * Content-Type: application/x-www-form-urlencoded
+     * Content-Length: 43
+     *
+     * formInfo02=jsonData02&formInfo01=jsonData01
+     */
+    fun sendHttpOnDC(
+        label: String,
+        url: String,
+        headerMap: Map<String, String>?,
+        formBodyMap: Map<String, String>?,
+        callback: HttpRequestCallback
+    ) {
+        sendHttpOnDC(label, url, headerMap, formBodyMap, null, callback)
+    }
 
-//    /**
-//     * post file on http.
-//     */
-//    abstract fun uploadFile(
-//        label: String, headers: Map<String, String>,
-//        formFile: FormFile, callback: RequestCallback
-//    )
-//
-//    /**
-//     * download file on http.
-//     */
-//    abstract fun downloadFile(
-//        label: String, headers: Map<String, String>,
-//        destPath: String, callback: RequestCallback
-//    )
+    /**
+     * send http post request through DataChannel
+     *
+     * POST /?Terminal_Vendor=UNISOC&Terminal_Model=ums9620_2h10_native HTTP/1.1
+     * If-None-Match: 8790279ffba16de0a7ea673729be2ae6
+     * Content-Type: multipart/form-data; boundary=9b459543-901f-415f-a2c6-4ebe962aafe5
+     * Content-Length: 205
+     *
+     * --9b459543-901f-415f-a2c6-4ebe962aafe5
+     * Content-Disposition: form-data; name="field1"; filename="123.txt"
+     * Content-Type: text/plain
+     * Content-Length: 7
+     *
+     * 123.txt
+     * --9b459543-901f-415f-a2c6-4ebe962aafe5--
+     */
+    fun sendHttpOnDC(
+        label: String,
+        url: String,
+        headerMap: Map<String, String>?,
+        formFileList: List<File?>?,
+        callback: HttpRequestCallback
+    ) {
+        sendHttpOnDC(label, url, headerMap, null, formFileList, callback)
+    }
+
+    /**
+     * send http post request through DataChannel
+     *
+     * POST /?Terminal_Vendor=UNISOC&Terminal_Model=ums9620_2h10_native HTTP/1.1
+     * If-None-Match: 8790279ffba16de0a7ea673729be2ae6
+     * Content-Type: multipart/form-data; boundary=869157a6-e8a7-496f-9bf2-5d1d84bf35f6
+     * Content-Length: 455
+     *
+     * --869157a6-e8a7-496f-9bf2-5d1d84bf35f6
+     * Content-Disposition: form-data; name="formInfo02"
+     * Content-Length: 10
+     *
+     * jsonData02
+     * --869157a6-e8a7-496f-9bf2-5d1d84bf35f6
+     * Content-Disposition: form-data; name="formInfo01"
+     * Content-Length: 10
+     *
+     * jsonData01
+     * --869157a6-e8a7-496f-9bf2-5d1d84bf35f6
+     * Content-Disposition: form-data; name="file1"; filename="123.txt"
+     * Content-Type: text/plain
+     * Content-Length: 7
+     *
+     * 123.txt
+     * --869157a6-e8a7-496f-9bf2-5d1d84bf35f6--
+     */
+    abstract fun sendHttpOnDC(
+        label: String,
+        url: String,
+        headerMap: Map<String, String>?,
+        formBodyMap: Map<String, String>?,
+        formFileList: List<File?>?,
+        callback: HttpRequestCallback
+    )
 
 
     fun getNetworkConfig(): NetworkConfig {
@@ -199,10 +264,10 @@ abstract class NetworkAdapter(
      */
     interface HttpRequestCallback : RequestCallback {
         fun onMessageCallback(
-                status: Int,
-                msg: String,
-                headers: MutableMap<String, String>?,
-                body: ByteArray?
+            status: Int,
+            msg: String,
+            headers: MutableMap<String, String>?,
+            body: ByteArray?
         )
     }
 
@@ -219,6 +284,7 @@ abstract class NetworkAdapter(
      */
     interface DataChannelCallback {
         fun onBootstrapDataChannelCreated(success: Boolean)
+
         // create AppDc by remote
         fun onImsDataChannelSetupRequest(dcLabels: Array<String>, slotId: Int, callId: String)
     }

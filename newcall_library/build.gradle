@@ -26,32 +26,39 @@ android {
     defaultPublishConfig "SpreadtrumRelease"
     flavorDimensions "vendor"
     productFlavors {
-        Qcom {
+        QualcommZTE {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"com.cmcc.action.ims.datachannel\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.android.dialer\"")//provide by ZTE
+            buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
+        }
+
+        Qualcomm {
             dimension "vendor"
             buildConfigField("String", "ACTION_NAME", "\"com.cmcc.action.ims.datachannel\"")
             buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"")
-            buildConfigField("long", "CHUNK_SIZE", "128000") //128k
+            buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
         }
 
         Mtk {
             dimension "vendor"
             buildConfigField("String", "ACTION_NAME", "\"BIND_SERVICE\"")
             buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"")
-            buildConfigField("long", "CHUNK_SIZE", "1000000") //1M
+            buildConfigField("long", "CHUNK_SIZE", "64000") // rfc8864 sdp协商 max-message-size 默认为64k
         }
 
         Samsung {
             dimension "vendor"
-            buildConfigField("String", "ACTION_NAME", "\"com.cmcc.dcservice\"")
+            buildConfigField("String", "ACTION_NAME", "\"com.shannon.imsservice.call.dc.IImsDataChannelServiceController\"")
             buildConfigField("String", "PACKAGE_NAME", "\"com.shannon.imsservice\"")
-            buildConfigField("long", "CHUNK_SIZE", "1000000") //1M
+            buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
         }
 
         Spreadtrum {
             dimension "vendor"
             buildConfigField("String", "ACTION_NAME", "\"com.unisoc.ims.ImsDataChannelService\"")
             buildConfigField("String", "PACKAGE_NAME", "\"com.spreadtrum.ims\"")
-            buildConfigField("long", "CHUNK_SIZE", "1000000") //1M
+            buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
         }
     }
 
@@ -97,45 +104,43 @@ repositories {
 }
 
 dependencies {
-    // jars
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    // android
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation "androidx.core:core-ktx:1.3.2"
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
-    // junit
+    //
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    // gson
-    implementation 'com.google.code.gson:gson:2.8.6'
-    // bolts
-    implementation 'com.parse.bolts:bolts-tasks:1.4.0'
+    //
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
+    implementation "androidx.core:core-ktx:1.3.2"
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     // room
     api "androidx.room:room-runtime:2.4.2"
     annotationProcessor "androidx.room:room-compiler:2.4.2"
     kapt("androidx.room:room-compiler:2.4.2")
+    // gson
+    implementation 'com.google.code.gson:gson:2.8.6'
+    // bolts
+    implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     // okio
     implementation "com.squareup.okio:okio:2.8.0"
-    // glide
-    implementation "com.github.bumptech.glide:glide:4.12.0"
-    // PictureSelector 基础 (必须)
-    implementation 'io.github.lucksiege:pictureselector:v3.10.7'
-    implementation 'io.github.lucksiege:camerax:v3.10.7'
-    // dc
     // dc aidl接口
     embed (name: 'newcall_dc_aidl-release', ext: 'aar')
     api (name: 'newcall_dc_aidl-release', ext: 'aar')
-    // dc: http stack for ims dc.
+    // http stack for ims dc.
     embed(name: 'newcall_dc_httpstack-release', ext: 'aar')
     api(name: 'newcall_dc_httpstack-release', ext: 'aar')
-    // dc: 涂鸦
+    // dc 涂鸦
     embed (name: 'newcall_sketch-release', ext: 'aar')
     api (name: 'newcall_sketch-release', ext: 'aar')
+    // glide
+    implementation "com.github.bumptech.glide:glide:4.12.0"
+    // PictureSelector
+    implementation 'io.github.lucksiege:pictureselector:v3.10.7'
+    implementation 'io.github.lucksiege:camerax:v3.10.7'
 }
 
 // maven-publish multi-flavor 配置

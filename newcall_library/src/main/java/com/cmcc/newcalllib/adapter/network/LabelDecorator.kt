@@ -16,6 +16,8 @@
 
 package com.cmcc.newcalllib.adapter.network
 
+import com.cmcc.newcalllib.manage.support.storage.db.MiniApp
+
 /**
  * apply operation on dc label
  * @author jihongfei
@@ -35,6 +37,13 @@ interface LabelDecorator {
      * @return dc label with origin
      */
     fun addOrigin(origin: String, label: String): String
+
+    /**
+     * add origin(local or remote) in dc label if origin absent
+     * @param labels original dc labels
+     * @return dc label with origin
+     */
+    fun addOrigins(minApps: List<MiniApp>, labels: List<String>): List<String>
 
     /**
      * remove origin(local or remote) in dc label if origin exits

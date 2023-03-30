@@ -9,6 +9,8 @@ import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +21,9 @@ import android.widget.TextView;
 
 import com.cmcc.newcalllib.R;
 import com.cmcc.newcalllib.adapter.translate.bean.TranslateBean;
+import com.cmcc.newcalllib.adapter.translate.bean.TranslateBodyBean;
 import com.cmcc.newcalllib.tool.DisplayHelper;
+import com.cmcc.newcalllib.tool.LogUtil;
 import com.cmcc.newcalllib.tool.TimeUtil;
 
 import java.util.concurrent.Callable;
@@ -45,11 +49,10 @@ public class TranslateWindowHolder {
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mCtrlLPs;
     //
-    // 涂鸦控制器
     private RelativeLayout mCtrlLayout;
-    // 英语内容
-    private TextView mContentEngTv;
-    // 内容
+    // 翻译前的内容
+    private TextView mContentSourceTv;
+    // 翻译后的内容||识别出的文字
     private TextView mContentTv;
     // 时间
     private TextView mTimeTv;
@@ -144,9 +147,11 @@ public class TranslateWindowHolder {
             mCtrlLPs = getWindowLayoutParams();
             //加载显示悬浮窗
             mWindowManager.addView(mCtrlLayout, mCtrlLPs);
-            //
-            mContentEngTv = mCtrlLayout.findViewById(R.id.translate_content_eng_tv);
+            // 翻译前的内容
+            mContentSourceTv = mCtrlLayout.findViewById(R.id.translate_content_source_tv);
+            // 翻译后的内容||识别出的文字
             mContentTv = mCtrlLayout.findViewById(R.id.translate_content_tv);
+            // 时间
             mTimeTv = mCtrlLayout.findViewById(R.id.translate_time_tv);
         }
     }
@@ -161,38 +166,44 @@ public class TranslateWindowHolder {
             return;
         }
         // 没有数据，不做UI刷新
-        if (bean == null) {
+        if (bean == null || bean.getBody() == null) {
+            LogUtil.INSTANCE.d("TranslateWindowHolder: bean == null || bean.getBody() == null!!!  data: " + bean);
             return;
         }
-        // 实时翻译
-        if (bean.getContentType() == TranslateBean.Type.SPEECH_TRANSLATION) {
-            mContentEngTv.setVisibility(View.VISIBLE);
-        } else {
-            mContentEngTv.setVisibility(View.GONE);
-        }
-        //内容展示
-        mContentEngTv.setText(bean.getContentEng());
-        mContentTv.setText(bean.getContent());
+        TranslateBodyBean body = bean.getBody();
+
         // 显示时间
-        if (bean.getTime() > 0) {
-            mTimeTv.setVisibility(View.VISIBLE);
-            mTimeTv.setText(TimeUtil.getFormatHHMM(bean.getTime()));
+        long time = (body.getTime() > 0) ? body.getTime() : System.currentTimeMillis();
+        mTimeTv.setText(TimeUtil.getFormatHHMM(time));
+
+        // 翻译
+        if (!TextUtils.isEmpty(body.getSourceInfo()) && !TextUtils.isEmpty(body.getTargetInfo())) {
+            // 翻译前的内容
+            mContentSourceTv.setVisibility(View.VISIBLE);
+            mContentSourceTv.setText(body.getSourceInfo());
+            // 翻译后的内容
+            mContentTv.setText(body.getTargetInfo());
+        }
+        // 转写
+        else if (!TextUtils.isEmpty(body.getSourceInfo()) && TextUtils.isEmpty(body.getTargetInfo())) {
+            mContentSourceTv.setVisibility(View.GONE);
+            // 识别出的文字
+            mContentTv.setText(body.getSourceInfo());
         } else {
-            mTimeTv.setVisibility(View.GONE);
+            LogUtil.INSTANCE.d("TranslateWindowHolder: Error displaying UI!!!  data: " + bean);
         }
     }
 
     /**
      * 更新字体大小
      *
-     * @param txtSizeDp
+     * @param txtSizeSp
      */
-    public void updateTranslateTextSize(int txtSizeDp) {
+    public void updateTranslateTextSize(int txtSizeSp) {
         // 字体大小
-        if (txtSizeDp > 0) {
-            int txtSize = DisplayHelper.dp2px(mActivity, txtSizeDp);
-            mContentEngTv.setTextSize(txtSize);
-            mContentTv.setTextSize(txtSize);
+        if (txtSizeSp > 0) {
+            mContentSourceTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, txtSizeSp);
+            mContentTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, txtSizeSp);
         }
     }
 

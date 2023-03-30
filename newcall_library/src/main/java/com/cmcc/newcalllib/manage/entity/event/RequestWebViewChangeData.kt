@@ -1,3 +1,6 @@
 package com.cmcc.newcalllib.manage.entity.event
 
-data class RequestWebViewChangeData(val width: Int?, val height: Int?, val visibility: Int?)
+data class RequestWebViewChangeData(val width: Int?, val height: Int?,
+                                    val visibility: Int?,
+                                    val horizontalPos: Int?,
+                                    val verticalPos: Int?)

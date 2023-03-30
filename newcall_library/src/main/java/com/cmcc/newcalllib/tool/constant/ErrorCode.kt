@@ -14,6 +14,9 @@ enum class ErrorCode(private val code: Int, private val reason: String) {
     DATA_CHANNEL_NOT_AVAILABLE(1004, "DataChannel not available"),
     MINI_APP_STACK_WRONG(1005, "Mini-app stack in chaos"),
     TRANSFER_FILE_NOT_SAVE(1006, "Transfer file save fail"),
+    DECOMPRESS_FILE_FAILED(1007, "The path does not end with the zip specified suffix"),
+    FILE_OR_FOLDER_NOT_EXIST(1008, "The file or folder for this path does not exist"),
+    FOLDER_IS_EMPTY(1008, "The folder for this path is empty"),
 
     // for APP
     BS_DATA_CHANNEL_ESTABLISH_FAIL(2000, "Bootstrap DC can not establish"),

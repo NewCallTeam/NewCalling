@@ -208,4 +208,21 @@ object FileUtil {
         }
     }
 
+    /**
+     * do not suggest use
+     */
+    fun getFileExt(contentType: String): String? {
+        if (contentType in setOf(
+                "application/zip",
+                "application/x-gzip",
+            )) {
+            return "zip"
+        } else if (contentType.contains("image/")
+            || contentType.contains("video/")
+            || contentType.contains("audio/")) {
+            return contentType.substring(contentType.indexOf("/") + 1)
+        }
+        return null
+    }
+
 }

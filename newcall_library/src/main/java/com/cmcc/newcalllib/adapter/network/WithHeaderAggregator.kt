@@ -12,7 +12,7 @@ class WithHeaderAggregator : DataAggregator {
         byteBuffer: ByteBuffer,
         callback: (buffer: ByteBuffer) -> Any
     ) {
-        TODO("Not yet implemented")
+        // TODO("WithHeaderAggregator not yet implemented")
     }
 
 }

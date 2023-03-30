@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2023 China Mobile Communications Group Co.,Ltd. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the XXXX License, Version X.X (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  http://xxxxxxx/licenses/LICENSE-X.X
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,12 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.luck.picture.lib.engine.ImageEngine;
 import com.luck.picture.lib.utils.ActivityCompatHelper;
 
-public class NewCallGlide implements ImageEngine {
+/**
+ * @author：luck
+ * @date：2019-11-13 17:02
+ * @describe：Glide加载引擎
+ */
+public class GlideEngine implements ImageEngine {
 
     /**
      * 加载图片
@@ -73,7 +78,7 @@ public class NewCallGlide implements ImageEngine {
                 .override(180, 180)
                 .sizeMultiplier(0.5f)
                 .transform(new CenterCrop(), new RoundedCorners(8))
-                .placeholder(R.drawable.ps_image_placeholder)
+                .placeholder(com.luck.picture.lib.R.drawable.ps_image_placeholder)
                 .into(imageView);
     }
 
@@ -94,7 +99,7 @@ public class NewCallGlide implements ImageEngine {
                 .load(url)
                 .override(200, 200)
                 .centerCrop()
-                .placeholder(R.drawable.ps_image_placeholder)
+                .placeholder(com.luck.picture.lib.R.drawable.ps_image_placeholder)
                 .into(imageView);
     }
 
@@ -108,14 +113,14 @@ public class NewCallGlide implements ImageEngine {
         Glide.with(context).resumeRequests();
     }
 
-    private NewCallGlide() {
+    private GlideEngine() {
     }
 
     private static final class InstanceHolder {
-        static final NewCallGlide instance = new NewCallGlide();
+        static final GlideEngine instance = new GlideEngine();
     }
 
-    public static NewCallGlide createGlideEngine() {
+    public static GlideEngine createGlideEngine() {
         return InstanceHolder.instance;
     }
 }

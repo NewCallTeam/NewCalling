@@ -108,18 +108,18 @@ object IntentUtil {
                 val split = documentId.split(":")
                 val type = split[0]
 
-                var mediaContentUri: Uri? = null
-                if ("image".equals(type)) {
-                    mediaContentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                } else if ("audio".equals(type)) {
-                    mediaContentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                } else if ("video".equals(type)) {
-                    mediaContentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                var contentUri: Uri? = null
+                if ("image" == type) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                } else if ("video" == type) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                } else if ("audio" == type) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 }
 
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-                return getDataColumn(context, mediaContentUri, selection, selectionArgs)
+                return getDataColumn(context, contentUri, selection, selectionArgs)
             }
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
             // MediaStore (and general)

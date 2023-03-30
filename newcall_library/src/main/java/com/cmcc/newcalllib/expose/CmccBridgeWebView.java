@@ -1,6 +1,7 @@
 package com.cmcc.newcalllib.expose;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
@@ -98,14 +99,20 @@ public class CmccBridgeWebView extends BridgeWebView {
             registerHandler(name, new BridgeHandler() {
                 @Override
                 public void handler(String dataFromJs, CallBackFunction function) {
-                    mCommunicator.handleJsRequest(name, dataFromJs, function);
+                    LogUtil.INSTANCE.d("CmccBridgeWebView: registerHandler.dataFromJs=" + dataFromJs);
+                    if(!TextUtils.isEmpty(dataFromJs)){
+                        mCommunicator.handleJsRequest(name, dataFromJs, function);
+                    }
                 }
             });
         }
         setDefaultHandler(new DefaultHandler() {
             @Override
             public void handler(String data, CallBackFunction function) {
-                mCommunicator.handleJsRequest(null, data, function);
+                LogUtil.INSTANCE.d("CmccBridgeWebView: setDefaultHandler.data=" + data);
+                if(!TextUtils.isEmpty(data)){
+                    mCommunicator.handleJsRequest(null, data, function);
+                }
             }
         });
     }

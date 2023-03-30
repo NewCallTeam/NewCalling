@@ -43,9 +43,12 @@ class MiniAppManager(
 )
 {
     companion object {
-        private const val TOKEN_SEED = "Bootstrap DataChannel Created"
+        private const val TOKEN_SEED = "CMCC_BOOTSTRAP"
+        private const val HTTP_HEADER_IF_NONE_MATCH = "If-None-Match"
+        private const val QUERY_TERMINAL_VENDOR = "Terminal_Vendor"
+        private const val QUERY_TERMINAL_MODEL = "Terminal_Model"
 
-        fun buildBsAppQuery(phase: String?): String {
+        fun buildBsAppQuery(phase: String?, display: String?): String {
             val token = TokenUtil.createTokenNeverTimeout(
                 TOKEN_SEED,
                 Constants.BOOTSTRAP_DATA_CHANNEL_LABEL_LOCAL
@@ -56,6 +59,10 @@ class MiniAppManager(
             if (phase != null) {
                 queryStr += "&phase=$phase"
             }
+            if (display != null) {
+                queryStr += "&display=$display"
+            }
+            LogUtil.d("buildBsAppQuery, query=$queryStr")
             return queryStr
         }
     }
@@ -77,6 +84,12 @@ class MiniAppManager(
 
     fun getBsAppPrepared(): Boolean {
         return mBootStrapMiniAppPrepared
+    }
+
+    fun markBsAppPrepared() {
+        LogUtil.d("mark bs app prepared")
+        mBootStrapMiniAppPrepared = true
+        mBootStrapMiniAppListener?.onPrepared()
     }
 
     fun setBootstrapMiniAppPrepareListener(listener: BootstrapMiniAppPrepareListener) {
@@ -116,11 +129,11 @@ class MiniAppManager(
     private fun getBootstrapMiniAppUrl(): String {
         val ti = ntvProvider.getTerminalInfo()
         val requestParameters: MutableMap<String, String> = HashMap()
-        requestParameters["Terminal_Vendor"] = ti.vendor
-        requestParameters["Terminal_Model"] = ti.model
+        requestParameters[QUERY_TERMINAL_VENDOR] = ti.vendor
+        requestParameters[QUERY_TERMINAL_MODEL] = ti.model
 
         val host = netAdapter.getNetworkConfig().host
-        return "$host/?Terminal_Vendor=${ti.vendor}&Terminal_Model=${ti.model}"
+        return "$host/?${QUERY_TERMINAL_VENDOR}=${ti.vendor}&${QUERY_TERMINAL_MODEL}=${ti.model}"
     }
 
     /**
@@ -141,26 +154,25 @@ class MiniAppManager(
                 val appInDb = t
                 if (appInDb != null) {
                     localVer = appInDb.version
-                    htmlFile = pathManager.getBootstrapMiniAppHtml()
-                    if (!ConfigManager.alwaysDownloadMiniApp && htmlFile?.exists() == true) {
-                        LogUtil.d("Get local cached bs app")
-                        callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
-                        mBootStrapMiniAppPrepared = true
-                        mBootStrapMiniAppListener?.onPrepared()
-                        return
-                    }
+//                    htmlFile = pathManager.getBootstrapMiniAppHtml()
+//                    if (!ConfigManager.alwaysDownloadMiniApp && htmlFile?.exists() == true) {
+//                        LogUtil.d("Get local cached bs app")
+//                        callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
+//                        markBsAppPrepared()
+//                        return
+//                    }
                 }
                 // url
                 val urlWithVer = baseUrl
                 LogUtil.d("Get bs app, build url=$urlWithVer")
                 // header
                 val headers: MutableMap<String, String> = HashMap()
-                headers["If-None-Match"] = localVer
+                headers[HTTP_HEADER_IF_NONE_MATCH] = localVer
                 // download
-                netAdapter.reqHttpGetOnBDC(Origin.LOCAL, urlWithVer, headers,object : NetworkAdapter.HttpRequestCallback {
+                netAdapter.sendHttpOnBootDC(Origin.LOCAL, urlWithVer, headers, object : NetworkAdapter.HttpRequestCallback {
                     override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                         LogUtil.d(
-                            "Get bs app, " +
+                            "Get bs app onSendDataCallback, " +
                                     "statusCode=$statusCode, errCode=$errorCode"
                         )
                     }
@@ -171,7 +183,7 @@ class MiniAppManager(
                         headers: MutableMap<String, String>?,
                         body: ByteArray?
                     ) {
-                        LogUtil.i("Get bs app, status=$status")
+                        LogUtil.i("Get bs app onMessageCallback, status=$status")
                         when (status) {
                             NetworkAdapter.STATUS_CODE_OK -> {
                                 var fos: FileOutputStream? = null
@@ -206,8 +218,7 @@ class MiniAppManager(
                                     miniAppRepo.saveMiniAppAsync(toSave, object : Callback<Boolean> {
                                         override fun onResult(t: Boolean) {
                                             LogUtil.i("Save bs mini-app result=$t")
-                                            mBootStrapMiniAppPrepared = true
-                                            mBootStrapMiniAppListener?.onPrepared()
+                                            markBsAppPrepared()
                                             callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
                                         }
                                     })
@@ -223,13 +234,12 @@ class MiniAppManager(
                             NetworkAdapter.STATUS_CODE_NO_MODIFY -> {
                                 LogUtil.d("bs mini-app no need to update")
                                 htmlFile = pathManager.getBootstrapMiniAppHtml()
+                                markBsAppPrepared()
                                 callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
-                                mBootStrapMiniAppPrepared = true
-                                mBootStrapMiniAppListener?.onPrepared()
                             }
                             else -> {
-                                mBootStrapMiniAppPrepared = true
-                                mBootStrapMiniAppListener?.onPrepared()
+                                markBsAppPrepared()
+                                LogUtil.d("bs mini-app status fail, status=$status")
                                 callback.onResult(Results.failure("Get bs app status=$status"))
                             }
                         }
@@ -248,10 +258,11 @@ class MiniAppManager(
         url: String,
         callback: Callback<Results<String>>
     ) {
-        netAdapter.reqHttpGetOnBDC(Origin.LOCAL, url, emptyMap(),
+        LogUtil.d("GetApplicationList, url=$url")
+        netAdapter.sendHttpOnBootDC(Origin.LOCAL, url, emptyMap(),
             object : NetworkAdapter.HttpRequestCallback {
                 override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
-                    LogUtil.d("Get application list, status=$statusCode, err=$errorCode")
+                    LogUtil.d("Get application list onSendDataCallback, status=$statusCode, err=$errorCode")
                 }
 
                 override fun onMessageCallback(
@@ -260,7 +271,7 @@ class MiniAppManager(
                     headers: MutableMap<String, String>?,
                     body: ByteArray?
                 ) {
-                    LogUtil.i("Get application list, status=$status, bodyLen=${body?.size}")
+                    LogUtil.i("Get application list onMessageCallback, status=$status, bodyLen=${body?.size}")
                     if (status == NetworkAdapter.STATUS_CODE_OK) {
                         if(body != null){
                             val strBody = String(body)
@@ -282,17 +293,17 @@ class MiniAppManager(
     /**
      * request bootstrap mini-app, then update db
      * @param appId request appId
-     * @param newestVer version of mini-app from applist.json
+     * @param newestAppVer version of mini-app from applist.json
      * @param callback result with absolute path of newest mini-app
      */
     fun prepareMiniApp(
         origin: Origin,
         url: String,
         appId: String,
-        newestVer: String,
+        newestAppVer: String,
         callback: Callback<Results<String>>
     ) {
-        LogUtil.d("prepareMiniApp")
+        LogUtil.d("prepareMiniApp, appId=$appId, origin=${origin.getName()}")
         // prepare path
         var htmlFile: File? = pathManager.getMiniAppHtml(appId)
         // find cached version
@@ -304,10 +315,20 @@ class MiniAppManager(
                     if (ConfigManager.alwaysDownloadMiniApp) {
                         LogUtil.i("Force download mna, appId=$appId")
                         localVer = appInDb.version
-                    } else if (appInDb.version == newestVer && htmlFile != null && htmlFile!!.exists()) {
+                    } else if (appInDb.version == newestAppVer && htmlFile != null && htmlFile!!.exists()) {
                         // no need update
                         LogUtil.i("No need to download mna, appId=$appId")
-                        callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
+                        val toSave = appInDb.copy(
+                            updateTime = System.currentTimeMillis(),
+                            origin = origin.getName()
+                        )
+                        LogUtil.d("mini-app to save: $toSave")
+                        miniAppRepo.saveMiniAppAsync(toSave, object : Callback<Boolean> {
+                            override fun onResult(t: Boolean) {
+                                LogUtil.i("Save mini-app result=$t")
+                                callback.onResult(Results.success(htmlFile!!.absolutePath.toString()))
+                            }
+                        })
                         return
                     } else {
                         LogUtil.i("Try download mna, appId=$appId")
@@ -319,9 +340,9 @@ class MiniAppManager(
                 LogUtil.d("Get application, url=$urlWithVer")
                 // header
                 val headers: MutableMap<String, String> = HashMap()
-                headers["If-None-Match"] = localVer
+                headers[HTTP_HEADER_IF_NONE_MATCH] = localVer
                 // download
-                netAdapter.reqHttpGetOnBDC(origin, urlWithVer, headers,object : NetworkAdapter.HttpRequestCallback {
+                netAdapter.sendHttpOnBootDC(origin, urlWithVer, headers, object : NetworkAdapter.HttpRequestCallback {
                     override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                         LogUtil.d(
                             "Get application, appId=$appId, " +
@@ -360,11 +381,11 @@ class MiniAppManager(
                                     val toSave = if (appInDb == null) {
                                         MiniApp(
                                             appId, htmlFile!!.absolutePath.toString(),
-                                            newestVer, "", now, now, origin.getName()
+                                            newestAppVer, "", now, now, origin.getName()
                                         )
                                     } else {
                                         appInDb.copy(
-                                            version = newestVer,
+                                            version = newestAppVer,
                                             updateTime = now,
                                             origin = origin.getName()
                                         )
@@ -453,6 +474,23 @@ class MiniAppManager(
         miniAppRepo.getLocalMiniAppAsync(appId, object : Callback<MiniApp?> {
             override fun onResult(t: MiniApp?) {
                 if (t == null) {
+                    callback.onResult(Results.failure(NewCallException("mini app not found")))
+                } else {
+                    callback.onResult(Results.success(t))
+                }
+            }
+        })
+    }
+
+    /**
+     * find the stored mini-app by appId list.
+     * @param appIds of desired mini-apps
+     * @param callback result with mini-apps
+     */
+    fun findMiniApp(appIds: List<String>, callback: Callback<Results<List<MiniApp>>>) {
+        miniAppRepo.getLocalMiniAppsAsync(appIds, object : Callback<List<MiniApp>> {
+            override fun onResult(t: List<MiniApp>) {
+                if (t.isEmpty()) {
                     callback.onResult(Results.failure(NewCallException("mini app not found")))
                 } else {
                     callback.onResult(Results.success(t))
@@ -627,7 +665,7 @@ class MiniAppManager(
                  path: String?,
                  contentType: String,
                  byteArray: ByteArray,
-                 callback: Callback<Result<String>>) {
+                 callback: Callback<Results<String>>) {
         miniAppSpaceRepo.saveFile(appId, path, contentType, byteArray, callback)
     }
 }

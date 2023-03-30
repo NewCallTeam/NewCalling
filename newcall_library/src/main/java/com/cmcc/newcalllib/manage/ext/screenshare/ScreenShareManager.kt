@@ -19,12 +19,14 @@ package com.cmcc.newcalllib.manage.ext.screenshare
 import android.app.Activity
 import android.content.Intent
 import android.telecom.Call
+import android.telecom.VideoProfile
 import android.text.TextUtils
+import android.widget.Toast
 import bolts.Task
 import com.cmcc.newcalllib.adapter.network.NetworkAdapter
 import com.cmcc.newcalllib.adapter.screenshare.SketchWindowHolder
 import com.cmcc.newcalllib.adapter.screenshare.SketchWindowHolder.CallType
-import com.cmcc.newcalllib.adapter.screenshare.transferbean.SketchAction
+import com.cmcc.newcalllib.adapter.screenshare.bean.SketchCmdBean
 import com.cmcc.newcalllib.expose.LifeCycleState
 import com.cmcc.newcalllib.expose.ScreenShareHandler
 import com.cmcc.newcalllib.expose.ScreenShareStatus
@@ -86,6 +88,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
      * 注册label数据的拦截器
      */
     private fun registerDataInterceptor(dcLabel: String) {
+        LogUtil.d("ScreenShareManager: registerDataInterceptor. dcLabel=$dcLabel")
         extensionManager.networkAdapter.registerDataInterceptor(object :
             NetworkAdapter.DataInterceptor {
             override fun provideDataChannelLabel(): String {
@@ -94,10 +97,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
 
             override fun onDataArrive(data: ByteBuffer): Boolean {
                 // 收到涂鸦数据
-                val sketchData = data.toStr()
-                LogUtil.d("ScreenShareManager", "onDataArrive: $sketchData")
-                // 收到涂鸦数据
-                onSketchDataReceived(sketchData)
+                onSketchDataReceived(data.toStr())
                 return true
             }
         })
@@ -106,7 +106,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     /**
-     * Dialer API：启动屏幕共享
+     * Dialer API: 启动屏幕共享
      * @param role 当前终端处于屏幕共享业务哪个角色 0 为发起方，1 为接收方
      * @param dcLabel 屏幕共享即将占用的 dclable 名称
      * @param callback
@@ -116,7 +116,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
         dcLabel: String,
         callback: Callback<Results<Boolean>>
     ) {
-        LogUtil.d("enableScreenShare, handler=$mScreenShareHandler")
+        LogUtil.d("ScreenShareManager: enableScreenShare. role=$role dcLabel=$dcLabel handler=$mScreenShareHandler")
 
         // 主被叫数据赋值
         if (role == ReqControlScreenShare.ROLE_POSITIVE) {
@@ -128,16 +128,16 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
         if (mScreenShareDcLabel == null) {
             mScreenShareDcLabel = dcLabel
             registerDataInterceptor(dcLabel)
-            LogUtil.i("enableScreen, set dcLabel first: $dcLabel")
+            LogUtil.d("ScreenShareManager: enableScreen.set dcLabel first: $dcLabel")
         } else if (mScreenShareDcLabel != dcLabel) {
             throw NewCallException("dcLabel different with previous in screenShare")
         }
-        // 主叫：
+        // 主叫: 
         if (mCallType == CallType.MO) {
-            // Dialer API：启动dialer的屏幕录制功能
+            // Dialer API: 启动dialer的屏幕录制功能
             mScreenShareHandler?.startNativeScreenShare(object : ScreenShareStatusListener {
                 override fun onScreenShareStatus(status: ScreenShareStatus) {
-                    // 回调：屏幕录制启动成功
+                    // 回调: 屏幕录制启动成功
                     callback.onResult(Results(status == ScreenShareStatus.SUCCESS))
                     // 开启涂鸦悬浮窗
                     if (status == ScreenShareStatus.SUCCESS) {
@@ -150,8 +150,10 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
                 }
             })
         }
-        // 被叫：
+        // 被叫: 
         else if (mCallType == CallType.MT) {
+            // 回调: 拦截数据成功
+            callback.onResult(Results(true))
             // show sketch control window directly
             // 1、初始化涂鸦浮层的View
             // 2、展示悬浮窗（并检测悬浮窗权限）
@@ -161,42 +163,42 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
 
 
     /**
-     * Dialer API：关闭屏幕共享
+     * Dialer API: 关闭屏幕共享
      */
     override fun disableScreenShare() {
-        LogUtil.d("disableScreenShare, handler=$mScreenShareHandler")
-        // Dialer API：退出Dialoer录屏（调用dialer接口方法，关闭屏幕录制）
+        LogUtil.d("ScreenShareManager: disableScreenShare. handler=$mScreenShareHandler")
+        // Dialer API: 退出Dialoer录屏（调用dialer接口方法，关闭屏幕录制）
         if (mCallType == CallType.MO) {
             mScreenShareHandler?.stopNativeScreenShare()
         }
-        // 退出：悬浮窗
+        // 退出: 悬浮窗
         exitSketchControlWindow()
         mSketchWindowHolder = null
-        // 退出：重置label
+        // 退出: 重置label
         mScreenShareDcLabel = null
     }
 
     /**
-     * Dialer API：查询屏幕共享功能是否可用
+     * Dialer API: 查询屏幕共享功能是否可用
      */
     override fun isScreenShareAvailable(): Boolean {
-        LogUtil.d("isScreenShareAvailable, handler=$mScreenShareHandler")
+        LogUtil.d("ScreenShareManager: isScreenShareAvailable. handler=$mScreenShareHandler")
         // 调用dialer接口方法，判断dialer是否具备屏幕共享功能的能力
         val result = mScreenShareHandler?.requestNativeScreenShareAbility()
         return if (result != null) {
-            LogUtil.i("isScreenShareAvailable result=$result")
+            LogUtil.d("ScreenShareManager: isScreenShareAvailable result=$result")
             result
         } else {
-            LogUtil.w("isScreenShareAvailable result null")
+            LogUtil.d("ScreenShareManager: isScreenShareAvailable result null")
             false
         }
     }
 
     /**
-     *  SDK API：onActivityResult
+     *  SDK API: onActivityResult
      */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        LogUtil.d("ScreenShareManager, onActivityResult, req=$requestCode, res=$resultCode")
+        LogUtil.d("ScreenShareManager: onActivityResult. req=$requestCode, res=$resultCode")
         // 屏幕共享如果不是开启状态，不进行回调处理
         if (mSketchWindowHolder == null) {
             return;
@@ -205,10 +207,10 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
     }
 
     /**
-     * SDK API：电话状态变化
+     * SDK API: 电话状态变化
      */
     override fun onCallStateChanged(state: Int) {
-        LogUtil.d("ScreenShareManager, onCallStateChanged state=$state")
+        LogUtil.d("ScreenShareManager: onCallStateChanged. state=$state")
         // 屏幕共享如果不是开启状态，不进行回调处理
         if (mSketchWindowHolder == null) {
             return;
@@ -218,34 +220,42 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
         }
     }
 
+    override fun onCallTypeChanged(state: Int) {
+        LogUtil.d("ScreenShareManager: onCallTypeChanged. state: $state")
+        // 屏幕共享如果不是开启状态，不进行回调处理
+        if (mSketchWindowHolder == null) {
+            return;
+        }
+        // 转为音频通话（退出了屏幕共享）
+        if (state == 1) {
+            disableScreenShare();
+        }
+    }
+
     /**
-     * SDK API：Activity 生命周期变化
+     * SDK API: Activity 生命周期变化
      */
-    override fun onActivityVisibilityNotify(state: Int) {
-        LogUtil.d("visibilityNotify: $state")
+    override fun onActivityLifeCycleChanged(state: Int) {
+        LogUtil.d("ScreenShareManager: onActivityLifeCycleChanged. state: $state")
         // 屏幕共享如果不是开启状态，不进行回调处理
         if (mSketchWindowHolder == null) {
             return;
         }
         when (state) {
-            LifeCycleState.ON_FOREGROUND_IN_VOICE_CALL.value -> {
-                // 转为音频通话（退出了屏幕共享）
-                LogUtil.d("ON_FOREGROUND_IN_VOICE_CALL")
-                disableScreenShare();
-            }
-            LifeCycleState.ON_FOREGROUND_IN_VIDEO_CALL.value -> {
-                LogUtil.d("ON_FOREGROUND_IN_VIDEO_CALL")
+            LifeCycleState.ON_START.value -> {
                 // 被叫端: 回到前台
                 if (mCallType == CallType.MT) {
                     showSketchControlWindow();
                 }
             }
-            LifeCycleState.ON_BACKGROUND.value -> {
-                LogUtil.d("ON_BACKGROUND")
+            LifeCycleState.ON_STOP.value -> {
                 // 被叫端: 退到后台
                 if (mCallType == CallType.MT) {
                     exitSketchControlWindow()
                 }
+            }
+            LifeCycleState.ON_DESTROY.value -> {
+                disableScreenShare()
             }
         }
     }
@@ -256,27 +266,29 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
      * 展示屏幕涂鸦悬浮窗
      */
     private fun showSketchControlWindow() {
-        LogUtil.d("ScreenShareManager: ", "showSketchControlWindow")
+        LogUtil.d("ScreenShareManager: showSketchControlWindow")
         // 创建涂鸦Window
         if (mSketchWindowHolder == null) {
-            LogUtil.d("ScreenShareManager: ", "initSketchControlWindow：new mSketchWindowHolder")
+            LogUtil.d("ScreenShareManager: initSketchControlWindow: new mSketchWindowHolder")
             mSketchWindowHolder = SketchWindowHolder(getActivityOrThrow())
             mSketchWindowHolder?.setSketchWindowListener(object :
                 SketchWindowHolder.SketchWindowListener() {
                 override fun onExitScreenShareBtnClick(callType: Int) {
-                    LogUtil.d("ScreenShareManager: ", "showExitTipDialog")
+                    LogUtil.d("ScreenShareManager: onExitScreenShareBtnClick")
                     if (mActivity == null) {
                         return
                     }
-                    // 按钮点击：退出屏幕共享
+                    // Dialog 按钮确认: 退出屏幕共享
                     disableScreenShare()
+                    // 发送退出消息
+                    sendWindowExitData();
                 }
 
                 override fun onSketchEvent(sketchView: SketchView, event: Int, callType: Int) {
                     if (sketchView == null) {
                         return
                     }
-                    // 被叫：涂鸦完成，回调涂鸦数据
+                    // 被叫: 涂鸦完成，回调涂鸦数据
                     if (event == SketchView.Event.SKETCH_UP) {
                         sendDrawingDataFromMT(sketchView)
                     }
@@ -291,8 +303,8 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
      * 退出屏幕涂鸦悬浮窗
      */
     private fun exitSketchControlWindow() {
-        LogUtil.d("ScreenShareManager: ", "exitScreenShare")
-        // 退出：退出屏幕悬浮
+        LogUtil.d("ScreenShareManager: exitSketchControlWindow.")
+        // 退出: 退出屏幕悬浮
         mSketchWindowHolder?.exitSketchControlWindow()
     }
 
@@ -300,7 +312,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
      * 涂鸦Window弹窗权限申请
      */
     private fun onSketchWindowResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        LogUtil.d("ScreenShareManager: ", "onSketchWindowResult")
+        LogUtil.d("ScreenShareManager: onSketchWindowResult.")
         // 涂鸦中有权限申请弹窗
         mSketchWindowHolder?.onActivityResult(requestCode, resultCode, data)
     }
@@ -311,130 +323,203 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
      * @param sketchInfo
      */
     private fun addSketchInfo(sketchInfo: SketchInfoBean?) {
-        LogUtil.d("ScreenShareManager: ", "addSketch")
+        LogUtil.d("ScreenShareManager: addSketchInfo")
         mSketchWindowHolder?.addSketchInfo(sketchInfo)
     }
 
-    /**
-     * 移除列表中的sketch
-     *
-     * @param sketchIds
-     */
-    private fun rollBackSketchs(sketchIds: List<String?>?) {
-        LogUtil.d("ScreenShareManager: ", "rollBackSketchs")
-        mSketchWindowHolder?.rollBackSketchs(sketchIds)
-    }
+//    /**
+//     * 移除列表中的sketch
+//     *
+//     * @param sketchIds
+//     */
+//    private fun rollBackSketchs(sketchIds: List<String?>?) {
+//        LogUtil.d("ScreenShareManager: rollBackSketchs")
+//        mSketchWindowHolder?.rollBackSketchs(sketchIds)
+//    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~涂鸦消息接收Begin~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     /**
      * 接收到涂鸦数据
      */
-    private fun onSketchDataReceived(sketchData: String) {
-        LogUtil.d("ScreenShareManager: ", "onSketchDataReceived: $sketchData")
+    private fun onSketchDataReceived(data: String) {
+        LogUtil.d("ScreenShareManager: onSketchDataReceived. data: $data")
         // 收到屏幕共享DC消息
-        var sketchAction: SketchAction? = null
-        try {
-            val base64Data = JSONObject(sketchData).getString("data")
-            val sketchJsonData = Base64Util.base64ToStr(base64Data)
-            sketchAction = Gson().fromJson(sketchJsonData, SketchAction::class.java)
-            LogUtil.d("ScreenShareManager: ", "base64Data: $base64Data")
-            LogUtil.d("ScreenShareManager: ", "sketchJsonData: $sketchJsonData")
-            LogUtil.d("ScreenShareManager: ", "sketchAction: $sketchAction")
-        } catch (e: JSONException) {
-            e.printStackTrace()
-            return
-        }
-        // UI_Thread
-        Task.call({
-            when (sketchAction!!.actionType) {
-                // 展示悬浮窗
-                SketchAction.Type.SHOW_SKETCH_WINDOW-> {
-                    if (mCallType == CallType.MT) {
-                        // 1、初始化涂鸦浮层的View
-                        // 2、展示悬浮窗（并检测悬浮窗权限）
-                        showSketchControlWindow()
+        Task.call(
+            {
+                // 收到屏幕共享DC消息
+                val base64Data = JSONObject(data).getString("data")
+                val sketchCmdJsonData = Base64Util.base64ToStr(base64Data)
+                LogUtil.d("ScreenShareManager: base64Data: $base64Data")
+                LogUtil.d("ScreenShareManager: sketchCmdJsonData: $sketchCmdJsonData")
+                //
+                Gson().fromJson(sketchCmdJsonData, SketchCmdBean::class.java)
+            }, Task.BACKGROUND_EXECUTOR
+        ).continueWith<Boolean>(
+            { task ->
+                // 2、主线程更新UI
+                val error = task.error
+                val sketchCmdBean = task.result
+                LogUtil.d("ScreenShareManager: error=$error")
+                LogUtil.d("ScreenShareManager: sketchCmdBean=$sketchCmdBean")
+                when (sketchCmdBean!!.cmdType) {
+                    // 控制命令：展示悬浮窗
+                    SketchCmdBean.CmdType.WINDOW_SHOW -> {
+                        if (mCallType == CallType.MT) {
+                            // 1、初始化涂鸦浮层的View
+                            // 2、展示悬浮窗（并检测悬浮窗权限）
+                            showSketchControlWindow()
+                        }
+                    }
+                    // 控制命令：退出
+                    SketchCmdBean.CmdType.WINDOW_EXIT -> {
+                        // 退出
+                        disableScreenShare()
+                    }
+                    // 绘制命令：涂鸦数据
+                    SketchCmdBean.CmdType.SKETCH_DATA -> {
+                        if (sketchCmdBean?.sketchData == null) {
+                            true
+                        }
+                        if (mCallType == CallType.MO) {
+                            // 如果涂鸦蒙版不存在，则展示涂鸦蒙版
+                            mSketchWindowHolder?.showSketchView()
+                            // 解析与绘制涂鸦数据
+                            val sketchData = sketchCmdBean.sketchData
+                            val sketchInfoBean = SketchInfoBean(sketchData.sketchId)
+                            sketchInfoBean.sketchColor = sketchData.sketchColor
+                            sketchInfoBean.sketchDipWidth = sketchData.sketchDipWidth
+                            sketchInfoBean.quadMoveTo = sketchData.quadMoveTo
+                            sketchInfoBean.quadControlPoints = sketchData.quadControlPoints
+                            sketchInfoBean.quadEndPoints = sketchData.quadEndPoints
+                            // "主叫"收到涂鸦动作:添加一笔涂鸦数据
+                            addSketchInfo(sketchInfoBean);
+                        }
                     }
                 }
-                // 涂鸦数据
-                SketchAction.Type.DRAWING -> {
-                    if (sketchAction?.drawing == null) {
-                        true
-                    }
-                    if (mCallType == CallType.MO) {
-                        // 如果涂鸦蒙版不存在，则展示涂鸦蒙版
-                        mSketchWindowHolder?.showSketchView()
-                        // 解析与绘制涂鸦数据
-                        val sketchMsgDrawing = sketchAction.drawing
-                        val sketchInfoBean = SketchInfoBean(sketchMsgDrawing.sketchId)
-                        sketchInfoBean.sketchColor = sketchMsgDrawing.sketchColor
-                        sketchInfoBean.sketchDipWidth = sketchMsgDrawing.sketchDipWidth
-                        sketchInfoBean.quadMoveTo = sketchMsgDrawing.quadMoveTo
-                        sketchInfoBean.quadControlPoints = sketchMsgDrawing.quadControlPoints
-                        sketchInfoBean.quadEndPoints = sketchMsgDrawing.quadEndPoints
-                        // "主叫"收到涂鸦动作:添加一笔涂鸦数据
-                        addSketchInfo(sketchInfoBean);
-                    }
-                }
-                // 撤销数据
-                SketchAction.Type.UNDO -> {
-                }
-            }
-            true
-        }, Task.UI_THREAD_EXECUTOR)
+                true
+            }, Task.UI_THREAD_EXECUTOR
+        )
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~涂鸦消息发送Begin~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     /**
-     * 主叫：向被叫发送消息"可以展示涂鸦悬浮窗了"
+     * 主叫: 向被叫发送消息"可以展示涂鸦悬浮窗了"
      */
     private fun sendWindowShowedFromMO() {
         if (mCallType == CallType.MO) {
-            val sketchAction = SketchAction.Builder()
-                .setActionType(SketchAction.Type.SHOW_SKETCH_WINDOW)
+            LogUtil.d("ScreenShareManager: sendWindowShowedFromMO. mCallType: $mCallType")
+            val sketchCmd = SketchCmdBean.Builder()
+                .setCmdType(SketchCmdBean.CmdType.WINDOW_SHOW)
                 .build()
             // 构造base64数据
-            val jsonData = Gson().toJson(sketchAction)
-            val base64Data = Base64Util.strToBase64(Gson().toJson(sketchAction))
-            LogUtil.d("ScreenShareManager: ", "sketchJson: $jsonData")
-            LogUtil.d("ScreenShareManager: ", "base64Data: $base64Data")
+            val sketchCmdJsonData = Gson().toJson(sketchCmd)
+            val base64Data = Base64Util.strToBase64(Gson().toJson(sketchCmd))
+            LogUtil.d("ScreenShareManager: sketchCmdJsonData: $sketchCmdJsonData")
+            LogUtil.d("ScreenShareManager: base64Data: $base64Data")
             // 发送数据
-            sendSketchDataByDc(mScreenShareDcLabel!!, base64Data)
+            sendSketchDataByDc(mScreenShareDcLabel!!, base64Data,
+                object : NetworkAdapter.RequestCallback {
+                    override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
+                        // UI_Thread
+                        Task.call({
+                            if (statusCode < 1) {
+                                Toast.makeText(
+                                    mActivity,
+                                    "DC唤起消息发送失败: $errorCode",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                true
+                            }
+                            // 被叫: 清空这一笔涂鸦数据
+                            mSketchWindowHolder?.clearSketch()
+                            true
+                        }, Task.UI_THREAD_EXECUTOR)
+                    }
+                })
         }
     }
 
+    private fun sendWindowExitData() {
+        LogUtil.d("ScreenShareManager: sendWindowExit.")
+        val sketchCmd = SketchCmdBean.Builder()
+            .setCmdType(SketchCmdBean.CmdType.WINDOW_EXIT)
+            .build()
+        // 构造base64数据
+        val sketchCmdJsonData = Gson().toJson(sketchCmd)
+        val base64Data = Base64Util.strToBase64(Gson().toJson(sketchCmd))
+        LogUtil.d("ScreenShareManager: sketchCmdJsonData: $sketchCmdJsonData")
+        LogUtil.d("ScreenShareManager: base64Data: $base64Data")
+        // 发送数据
+        sendSketchDataByDc(mScreenShareDcLabel!!, base64Data,
+            object : NetworkAdapter.RequestCallback {
+                override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
+                    // UI_Thread
+                    Task.call({
+                        if (statusCode < 1) {
+                            Toast.makeText(mActivity, "DC退出消息发送失败: $errorCode", Toast.LENGTH_SHORT)
+                                .show()
+                            true
+                        }
+                        true
+                    }, Task.UI_THREAD_EXECUTOR)
+                }
+            })
+    }
+
     /**
-     * 被叫：发送一笔涂鸦数据
+     * 被叫: 发送一笔涂鸦数据
      */
     private fun sendDrawingDataFromMT(sketchView: SketchView) {
-        LogUtil.d("ScreenShareManager: ", "onMTSketchDrawingDone")
         if (mCallType == CallType.MT) {
+            LogUtil.d("ScreenShareManager: sendDrawingDataFromMT.")
             //  涂鸦完成时，数据回调
             val sketchInfoBean = sketchView.currSketchInfo
             // 手指抬起
             // 生成一个drawding的数据
-            val sketchAction = SketchAction.Builder()
-                .setActionType(SketchAction.Type.DRAWING)
+            val sketchAction = SketchCmdBean.Builder()
+                .setCmdType(SketchCmdBean.CmdType.SKETCH_DATA)
                 .setSketchInfo(sketchInfoBean)
                 .build()
             // 构造base64数据
-            val jsonData = Gson().toJson(sketchAction)
+            val sketchCmdJsonData = Gson().toJson(sketchAction)
             val base64Data = Base64Util.strToBase64(Gson().toJson(sketchAction))
-            LogUtil.d("ScreenShareManager: ", "sketchJson: $jsonData")
-            LogUtil.d("ScreenShareManager: ", "base64Data: $base64Data")
-            // 被叫：发送drawing数据
-            sendSketchDataByDc(mScreenShareDcLabel!!, base64Data)
-            // 被叫：清空这一笔涂鸦数据
-            mSketchWindowHolder?.clearSketch()
+            LogUtil.d("ScreenShareManager: sketchCmdJsonData: $sketchCmdJsonData")
+            LogUtil.d("ScreenShareManager: base64Data: $base64Data")
+            // 被叫: 发送drawing数据
+            sendSketchDataByDc(mScreenShareDcLabel!!, base64Data,
+                object : NetworkAdapter.RequestCallback {
+                    override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
+                        // UI_Thread
+                        Task.call({
+                            if (statusCode < 1) {
+                                Toast.makeText(
+                                    mActivity,
+                                    "DC涂鸦数据发送失败: $errorCode",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                true
+                            }
+                            // 被叫: 清空这一笔涂鸦数据
+                            mSketchWindowHolder?.clearSketch()
+                            true
+                        }, Task.UI_THREAD_EXECUTOR)
+                    }
+                })
+
         }
     }
 
     /**
      * 发送涂鸦数据
      */
-    private fun sendSketchDataByDc(label: String, data: String) {
-        LogUtil.d("ScreenShareManager: ", "sendSketchData. label: $label data: $data")
+    private fun sendSketchDataByDc(
+        label: String,
+        data: String,
+        callback: NetworkAdapter.RequestCallback?
+    ) {
+        LogUtil.d("ScreenShareManager: sendSketchDataByDc. label: $label data: $data")
         if (TextUtils.isEmpty(data) || TextUtils.isEmpty(label)) {
             return;
         }
@@ -443,23 +528,16 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
             jsonObj.putOpt("msgid", UUID.randomUUID().toString())
             jsonObj.putOpt("msgtype", "request")
             jsonObj.putOpt("busstype", "screenshare")
-//            jsonObj.putOpt("requestuserid", mCallInfo?.localNumber)
-//            jsonObj.putOpt("oppositeid", mCallInfo?.remoteNumber)
             jsonObj.putOpt("data", data)
             jsonObj.putOpt("datalength", data?.toByteArray()?.size)
             val jsonStr = jsonObj.toString()
             // 发送消息数据
-            LogUtil.d(
-                "ScreenShareManager: ",
-                "sendDataOverAppDc. label: $label SketchJsonData: $jsonStr"
-            )
-            extensionManager.networkAdapter.sendDataOverAppDc(label, jsonStr,
+            LogUtil.d("ScreenShareManager: sendDataOverAppDc. label: $label SketchJsonData: $jsonStr")
+            extensionManager.networkAdapter.sendDataOnAppDC(label, jsonStr,
                 object : NetworkAdapter.RequestCallback {
                     override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
-                        LogUtil.d(
-                            "ScreenShareManager: ",
-                            "sendDataOverAppDc statusCode=$statusCode, errCode=$errorCode"
-                        )
+                        LogUtil.d("ScreenShareManager: sendDataOverAppDc statusCode=$statusCode, errCode=$errorCode")
+                        callback?.onSendDataCallback(statusCode, errorCode)
                     }
                 })
         } catch (e: Exception) {

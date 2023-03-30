@@ -42,9 +42,9 @@ abstract class BaseJsHandler : JsHandler {
         mJsCommunicator.handler.sendErrorCode(err)
     }
 
-    protected fun sendRequestSizeEvent(width: String?, height: String?, visibility: Int?) {
+    protected fun sendRequestSizeEvent(width: Int?, height: Int?, visibility: Int?, horizontalPos: Int?, verticalPos: Int?) {
         val eventAppNotify = EventAppNotify(EventAppNotify.ET_REQUEST_WEB_VIEW_CHANGE,
-            RequestWebViewChangeData(width?.toInt(), height?.toInt(), visibility))
+            RequestWebViewChangeData(width, height, visibility, horizontalPos, verticalPos))
         mJsCommunicator.handler.sendMessageType(EventType.APP_NOTIFY, eventAppNotify)
     }
 

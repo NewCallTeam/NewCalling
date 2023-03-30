@@ -28,7 +28,7 @@ class DataChannelHandlerImpl(val networkAdapter: NetworkAdapter) : DataChannelHa
     lateinit var passedDataCallback: (String, ByteBuffer) -> Unit
 
     override fun sendData(label: String, data: String, callback: (Int) -> Unit) {
-        networkAdapter.sendDataOverAppDc(label, data, object : NetworkAdapter.RequestCallback {
+        networkAdapter.sendDataOnAppDC(label, data, object : NetworkAdapter.RequestCallback {
             override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
                 callback.invoke(statusCode)
             }

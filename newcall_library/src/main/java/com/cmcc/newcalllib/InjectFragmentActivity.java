@@ -101,7 +101,7 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        int color = ContextCompat.getColor(this, R.color.ps_color_white);
+        int color = ContextCompat.getColor(this, com.luck.picture.lib.R.color.ps_color_white);
         ImmersiveManager.immersiveAboveAPI23(this, color, color, true);
         setContentView(R.layout.activity_inject_fragment);
         initView();
@@ -160,9 +160,9 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         if (mGalleryLine.getVisibility() == View.VISIBLE) {
             return;
         }
-        mGallery.setTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_white));
+        mGallery.setTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_white));
         mGalleryLine.setVisibility(View.VISIBLE);
-        mCamera.setTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_half_grey));
+        mCamera.setTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_half_grey));
         mCameraLine.setVisibility(View.INVISIBLE);
     }
 
@@ -182,7 +182,7 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         mSelectorFragment = PictureSelector.create(this)
                 .openGallery(mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()))
                 .setSelectorUIStyle(selectorStyle)
-                .setImageEngine(NewCallGlide.createGlideEngine())
+                .setImageEngine(GlideEngine.createGlideEngine())
                 .isOriginalControl(true) // 是否开启原图
                 .setSandboxFileEngine(new MeSandboxFileEngine())
                 .isDisplayCamera(false)
@@ -197,9 +197,9 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         if (mCameraLine.getVisibility() == View.VISIBLE) {
             return;
         }
-        mGallery.setTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_half_grey));
+        mGallery.setTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_half_grey));
         mGalleryLine.setVisibility(View.INVISIBLE);
-        mCamera.setTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_white));
+        mCamera.setTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_white));
         mCameraLine.setVisibility(View.VISIBLE);
     }
 
@@ -238,7 +238,7 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         fragmentManager.beginTransaction()
                 .add(R.id.fragment_content, mCameraFragment, mCameraFragment.getFragmentTag())
                 .commitAllowingStateLoss();
-        mCameraFragment.setFragmentListener(new CameraFragmentListener() {
+        mCameraFragment.setFragmentListener(new FragmentListener() {
             @Override
             public void handleCameraSuccess() {
                 pitchOnGallery();
@@ -261,22 +261,22 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         numberSelectMainStyle.setSelectNumberStyle(true);
         numberSelectMainStyle.setPreviewSelectNumberStyle(false);
         numberSelectMainStyle.setPreviewDisplaySelectGallery(true);
-        numberSelectMainStyle.setSelectBackground(R.drawable.ps_default_num_selector);
+        numberSelectMainStyle.setSelectBackground(com.luck.picture.lib.R.drawable.ps_default_num_selector);
         numberSelectMainStyle.setAdapterSelectStyleGravity(new int[]{RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.ALIGN_PARENT_END});
-        numberSelectMainStyle.setPreviewSelectBackground(R.drawable.ps_preview_checkbox_selector);
-        numberSelectMainStyle.setSelectNormalBackgroundResources(R.drawable.ps_select_complete_normal_bg);
-        numberSelectMainStyle.setSelectNormalTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_9b));
-        numberSelectMainStyle.setSelectNormalText(getString(R.string.ps_send));
-        numberSelectMainStyle.setAdapterPreviewGalleryBackgroundResource(R.drawable.ps_preview_gallery_bg);
+        numberSelectMainStyle.setPreviewSelectBackground(com.luck.picture.lib.R.drawable.ps_preview_checkbox_selector);
+        numberSelectMainStyle.setSelectNormalBackgroundResources(com.luck.picture.lib.R.drawable.ps_select_complete_normal_bg);
+        numberSelectMainStyle.setSelectNormalTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_9b));
+        numberSelectMainStyle.setSelectNormalText(getString(com.luck.picture.lib.R.string.ps_send));
+        numberSelectMainStyle.setAdapterPreviewGalleryBackgroundResource(com.luck.picture.lib.R.drawable.ps_preview_gallery_bg);
         numberSelectMainStyle.setAdapterPreviewGalleryItemSize(DensityUtil.dip2px(getContext(), 52));
-        numberSelectMainStyle.setPreviewSelectText(getString(R.string.ps_select));
+        numberSelectMainStyle.setPreviewSelectText(getString(com.luck.picture.lib.R.string.ps_select));
         numberSelectMainStyle.setPreviewSelectTextSize(14);
-        numberSelectMainStyle.setPreviewSelectTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_white));
+        numberSelectMainStyle.setPreviewSelectTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_white));
         numberSelectMainStyle.setPreviewSelectMarginRight(DensityUtil.dip2px(getContext(), 6));
-        numberSelectMainStyle.setSelectBackgroundResources(R.drawable.ps_select_complete_bg);
-        numberSelectMainStyle.setSelectText(getString(R.string.ps_send_num));
-        numberSelectMainStyle.setSelectTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_white));
-        numberSelectMainStyle.setMainListBackgroundColor(ContextCompat.getColor(getContext(), R.color.ps_color_black));
+        numberSelectMainStyle.setSelectBackgroundResources(com.luck.picture.lib.R.drawable.ps_select_complete_bg);
+        numberSelectMainStyle.setSelectText(getString(com.luck.picture.lib.R.string.ps_send_num));
+        numberSelectMainStyle.setSelectTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_white));
+        numberSelectMainStyle.setMainListBackgroundColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_black));
         numberSelectMainStyle.setCompleteSelectRelativeTop(false);
         numberSelectMainStyle.setPreviewSelectRelativeBottom(true);
         numberSelectMainStyle.setAdapterItemIncludeEdge(false);
@@ -287,14 +287,14 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
 
         // 底部NavBar 风格
         BottomNavBarStyle numberBottomNavBarStyle = new BottomNavBarStyle();
-        numberBottomNavBarStyle.setBottomNarBarBackgroundColor(ContextCompat.getColor(getContext(), R.color.ps_color_black));
-        numberBottomNavBarStyle.setBottomPreviewNarBarBackgroundColor(ContextCompat.getColor(getContext(), R.color.ps_color_half_grey));
-        numberBottomNavBarStyle.setBottomPreviewNormalText(getString(R.string.ps_preview));
-        numberBottomNavBarStyle.setBottomPreviewNormalTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_9b));
+        numberBottomNavBarStyle.setBottomNarBarBackgroundColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_black));
+        numberBottomNavBarStyle.setBottomPreviewNarBarBackgroundColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_half_grey));
+        numberBottomNavBarStyle.setBottomPreviewNormalText(getString(com.luck.picture.lib.R.string.ps_preview));
+        numberBottomNavBarStyle.setBottomPreviewNormalTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_9b));
         numberBottomNavBarStyle.setBottomPreviewNormalTextSize(16);
         numberBottomNavBarStyle.setCompleteCountTips(false);
-        numberBottomNavBarStyle.setBottomPreviewSelectText(getString(R.string.ps_preview));
-        numberBottomNavBarStyle.setBottomPreviewSelectTextColor(ContextCompat.getColor(getContext(), R.color.ps_color_white));
+        numberBottomNavBarStyle.setBottomPreviewSelectText(getString(com.luck.picture.lib.R.string.ps_preview));
+        numberBottomNavBarStyle.setBottomPreviewSelectTextColor(ContextCompat.getColor(getContext(), com.luck.picture.lib.R.color.ps_color_white));
 
         selectorStyle.setTitleBarStyle(numberTitleBarStyle);
         selectorStyle.setBottomBarStyle(numberBottomNavBarStyle);
@@ -516,18 +516,18 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
 
         if (TextUtils.equals(permissionArray[0], PermissionConfig.CAMERA[0])) {
             title = "相机权限使用说明";
-            explain = "相机权限使用说明\n用户app用于拍照/录视频";
+            explain = "相机权限使用说明\n需开启相机权限，用于拍照/录视频";
         } else if (TextUtils.equals(permissionArray[0], Manifest.permission.RECORD_AUDIO)) {
             if (isHasSimpleXCamera) {
                 title = "麦克风权限使用说明";
-                explain = "麦克风权限使用说明\n用户app用于录视频时采集声音";
+                explain = "麦克风权限使用说明\n需开启麦克风权限，用于录视频时采集声音";
             } else {
                 title = "录音权限使用说明";
-                explain = "录音权限使用说明\n用户app用于采集声音";
+                explain = "录音权限使用说明\n需开启麦录音权限，用于采集声音";
             }
         } else {
             title = "存储权限使用说明";
-            explain = "存储权限使用说明\n用户app写入/下载/保存/读取/修改/删除图片、视频、文件等信息";
+            explain = "存储权限使用说明\n需开启存储权限，用于下载/保存/读取/修改/删除图片、视频、文件等信息";
         }
         int startIndex = 0;
         int endOf = startIndex + title.length();
@@ -535,7 +535,7 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         builder.setSpan(new AbsoluteSizeSpan(DensityUtil.dip2px(viewGroup.getContext(), 16)), startIndex, endOf, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         builder.setSpan(new ForegroundColorSpan(0xFF333333), startIndex, endOf, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
         view.setText(builder);
-        view.setBackground(ContextCompat.getDrawable(viewGroup.getContext(), R.drawable.picture_ic_camera));
+        view.setBackground(ContextCompat.getDrawable(viewGroup.getContext(), R.drawable.ps_permission_desc_bg));
 
         if (isHasSimpleXCamera) {
             RelativeLayout.LayoutParams layoutParams =
@@ -547,7 +547,7 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         } else {
             ConstraintLayout.LayoutParams layoutParams =
                     new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.topToBottom = R.id.title_bar;
+            layoutParams.topToBottom = com.luck.picture.lib.R.id.title_bar;
             layoutParams.leftToLeft = ConstraintSet.PARENT_ID;
             layoutParams.leftMargin = dp10;
             layoutParams.rightMargin = dp10;

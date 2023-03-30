@@ -7,7 +7,9 @@ package com.cmcc.newcalllib.manage.entity.handler.req
  */
 data class ReqRequestWebViewChange(
         val appId: String,
-        val w: String?,
-        val h: String?,
-        val visibility: Int?
+        val w: Int?,
+        val h: Int?,
+        val visibility: Int?,
+        val horizontalPos: Int?,
+        val verticalPos: Int?,
 )

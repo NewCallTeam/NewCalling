@@ -20,6 +20,9 @@ interface MiniAppDao {
     @Query("SELECT * FROM MiniApp WHERE appId = :appId")
     fun getOne(appId: String): MiniApp?
 
+    @Query("SELECT * FROM MiniApp WHERE appId IN (:appIds)")
+    fun getList(appIds: List<String>): List<MiniApp>
+
     @Query("SELECT * FROM MiniApp")
     fun getAll(): List<MiniApp>
 }

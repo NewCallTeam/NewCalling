@@ -41,6 +41,8 @@ interface STTController {
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
 
+    fun onActivityLifeCycleChanged(state: Int)
+
     fun onCallStateChanged(state: Int)
 
 }

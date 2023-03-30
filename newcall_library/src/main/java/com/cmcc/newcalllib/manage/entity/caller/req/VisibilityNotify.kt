@@ -6,4 +6,10 @@ package com.cmcc.newcalllib.manage.entity.caller.req
  */
 data class VisibilityNotify(
     val state: Int
-)
+) {
+    companion object {
+        fun fromVisible(visible: Boolean): Int {
+            return if (visible) 1 else 0
+        }
+    }
+}

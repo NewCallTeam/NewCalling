@@ -50,6 +50,16 @@ class MiniAppRepoImpl(
         })
     }
 
+    override fun getLocalMiniAppsAsync(appIds: List<String>, callback: Callback<List<MiniApp>>) {
+        ThreadPoolUtil.runOnIOThread({
+            dao.getList(appIds)
+        }, {
+            ThreadPoolUtil.runOnUiThread {
+                callback.onResult(it)
+            }
+        })
+    }
+
     override fun saveStringInSp(key: String, value: String) {
         sp.put(key, value)
     }

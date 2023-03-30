@@ -16,7 +16,7 @@
 
 package com.cmcc.newcalllib;
 
-public interface CameraFragmentListener {
+public interface FragmentListener {
 
     void handleCameraSuccess();
 

@@ -51,8 +51,11 @@ interface ScreenShareController {
      */
     fun onCallStateChanged(state: Int)
 
+
+    fun onCallTypeChanged(state: Int)
+
     /**
      * activity 显示\隐藏状态通知与回调
      */
-    fun onActivityVisibilityNotify(state: Int)
+    fun onActivityLifeCycleChanged(state: Int)
 }

@@ -17,5 +17,7 @@ data class RespInfo(
         val screenHeight: Int? = null,
         val webViewWidth: Int? = null,
         val webViewHeight: Int? = null,
-        val webViewLifeCycleState: Int? = null
+        val webViewVisibility: Int? = null,
+        val callType: Int? = null,
+        val sdkVersion: String? = null
 )

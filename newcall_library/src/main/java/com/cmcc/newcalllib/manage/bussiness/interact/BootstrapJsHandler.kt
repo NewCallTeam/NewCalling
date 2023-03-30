@@ -9,6 +9,7 @@ import com.cmcc.newcalllib.manage.entity.event.NotifyAppMessage
 import com.cmcc.newcalllib.manage.entity.handler.req.*
 import com.cmcc.newcalllib.manage.entity.handler.resp.ResponseData
 import com.cmcc.newcalllib.manage.event.EventAppNotify
+import com.cmcc.newcalllib.manage.support.storage.db.MiniApp
 import com.cmcc.newcalllib.tool.FileUtil
 import com.cmcc.newcalllib.tool.JsonUtil
 import com.cmcc.newcalllib.tool.LogUtil
@@ -79,14 +80,18 @@ class BootstrapJsHandler : BaseJsHandler() {
                         invokeCallback(cbFromJs, ErrorCode.ARGUMENTS_ILLEGAL)
                     } else {
                         // query local db
-                        miniAppManager.findMiniAppPath(appId, object : Callback<Results<String>> {
-                            override fun onResult(t: Results<String>) {
-                                val path = t.getOrNull()
-                                if (path != null && FileUtil.exists(path, false)) {
-                                    sendRenderEvent(path = path)
-                                    invokeCallback(cbFromJs, ResponseData<Any>(1))
+                        miniAppManager.findMiniApp(appId, object : Callback<Results<MiniApp>> {
+                            override fun onResult(t: Results<MiniApp>) {
+                                if (t.value == null || t.value.path.isEmpty()
+                                    || !(FileUtil.exists(t.value.path, false)
+                                    && FileUtil.checkExtension(t.value.path, "html"))) {
+                                    invokeCallback(
+                                        cbFromJs,
+                                        ResponseData<Any>(0, message = "start app fail")
+                                    )
                                 } else {
-                                    invokeCallback(cbFromJs, ResponseData<Any>(0, message = "start app fail"))
+                                    sendRenderEvent(path = t.value.path, query = "origin=${t.value.origin}")
+                                    invokeCallback(cbFromJs, ResponseData<Any>(1))
                                 }
                             }
                         })

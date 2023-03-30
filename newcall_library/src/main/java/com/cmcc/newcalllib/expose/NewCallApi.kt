@@ -17,6 +17,13 @@ import com.cmcc.newcalllib.tool.LogUtil
  */
 @Suppress("unused", "FoldInitializerAndIfToElvis")
 object NewCallApi {
+    // display
+    public const val SHOW_AUTO_LOAD = 1
+    public const val SHOW_APP_LIST = 2
+    // message type
+    public const val MESSAGE_ON_BOOTSTRAP_READY = 0
+    public const val MESSAGE_REPORT_PARSED_BUSINESS = 1
+
     private const val RESULT_OK = 1
     private const val RESULT_FAIL = 0
     private const val RESULT_ERR_ALREADY_INIT = -1
@@ -27,6 +34,7 @@ object NewCallApi {
     private var mCurrentSessionId: String? = null
 
     private fun findNewCallManager(sessionId: String): NewCallManager? {
+        LogUtil.d("NewCallApi find $sessionId in ${mManagerMap.keys.joinToString()}")
         return mManagerMap[sessionId]
     }
 
@@ -46,7 +54,7 @@ object NewCallApi {
         } else {
             LogUtil.setLogLevel(LogUtil.DEBUG)
         }
-        LogUtil.i("NewCallApi initNewCall, info=$info")
+        LogUtil.i("NewCallApi initNewCall, info=$info, sessionId=$sessionId, ver=${BuildConfig.VERSION_NAME}")
 
         // init sdk manager
         // pre-check call validity
@@ -187,22 +195,54 @@ object NewCallApi {
         manager.onRequestPermissionsResult(requestCode, permissions, grantResults)
         return RESULT_OK
     }
-
     /**
-     * Update current view state.
+     * Update webView visibility
      * @param sessionId marks one call session. eg: slotId_remoteNumber
-     * @param state view state
-     * 1：ON_FOREGROUND_IN_VOICE_CALL
-     * 2：ON_BACKGROUND
-     * 3：ON_FOREGROUND_IN_VIDEO_CALL
+     * @param visible true if visible
      */
-    fun onLifeCycleChanged(sessionId: String, state: LifeCycleState): Int {
-        LogUtil.i("NewCallApi onLifeCycleChanged, state=$state")
+    fun onWebViewVisibilityChanged(sessionId: String, visible: Boolean): Int {
+        LogUtil.i("NewCallApi onWebViewVisibilityChanged, visible=$visible")
         val manager = findNewCallManager(sessionId)
         if (manager == null) {
             return RESULT_ERR_MISMATCH_SESSION
         }
-        manager.onLifeCycleChanged(state)
+        manager.onWebViewVisibilityChanged(visible)
+        return RESULT_OK
+    }
+
+    /**
+     * Update lifeCycle of InCalActivity
+     * @param sessionId marks one call session. eg: slotId_remoteNumber
+     * @param state view state
+     * 1):ON_CREATE
+     * 2):ON_START
+     * 3):ON_RESUME
+     * 4):ON_PAUSE
+     * 5):ON_STOP
+     * 6):ON_DESTROY
+     */
+    fun onActivityLifeCycleChanged(sessionId: String, state: LifeCycleState): Int {
+        LogUtil.i("NewCallApi onActivityLifeCycleChanged, state=$state")
+        val manager = findNewCallManager(sessionId)
+        if (manager == null) {
+            return RESULT_ERR_MISMATCH_SESSION
+        }
+        manager.onActivityLifeCycleChanged(state)
+        return RESULT_OK
+    }
+
+    /**
+     * Update videoState of the call
+     * @param sessionId marks one call session. eg: slotId_remoteNumber
+     * @param videoState video state
+     */
+    fun onCallTypeChanged(sessionId: String, videoState: Int): Int {
+        LogUtil.i("NewCallApi onCallTypeChanged, videoState=$videoState")
+        val manager = findNewCallManager(sessionId)
+        if (manager == null) {
+            return RESULT_ERR_MISMATCH_SESSION
+        }
+        manager.onCallTypeChanged(videoState)
         return RESULT_OK
     }
 
@@ -237,16 +277,16 @@ object NewCallApi {
     }
 
     /**
-     * Show mini-app list.
+     * Show mini-app home page.
      * @param sessionId marks one call session. eg: slotId_remoteNumber
      */
-    fun showMiniAppList(sessionId: String): Int {
-        LogUtil.i("NewCallApi showMiniAppList")
+    fun showHomePage(sessionId: String, display: Int): Int {
+        LogUtil.i("NewCallApi showHomePage display=$display")
         val manager = findNewCallManager(sessionId)
         if (manager == null) {
             return RESULT_ERR_MISMATCH_SESSION
         }
-        manager.showMiniAppList()
+        manager.showHomePage(display)
         return RESULT_OK
     }
 

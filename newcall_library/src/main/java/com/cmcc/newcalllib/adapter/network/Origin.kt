@@ -20,11 +20,11 @@ package com.cmcc.newcalllib.adapter.network
  * @author jihongfei
  * @createTime 2022/11/10 13:02
  */
-enum class Origin(name: String) {
+enum class Origin(private val originName: String) {
     LOCAL("local"),
     REMOTE("remote");
 
     fun getName(): String {
-        return name
+        return originName
     }
 }

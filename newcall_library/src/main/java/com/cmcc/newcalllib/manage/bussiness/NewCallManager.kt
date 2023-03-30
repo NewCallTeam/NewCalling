@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.telecom.Call
+import com.cmcc.newcalllib.adapter.ar.local.LocalARAdapter
 import com.cmcc.newcalllib.manage.ext.ExtensionManager
 import com.cmcc.newcalllib.adapter.network.ImsDCNetworkAdapter
 import com.cmcc.newcalllib.adapter.network.LabelDecoratorImpl
@@ -24,6 +25,8 @@ import com.cmcc.newcalllib.manage.entity.Results
 import com.cmcc.newcalllib.manage.entity.event.NotifyAppMessage
 import com.cmcc.newcalllib.manage.entity.event.NotifyJsMessage
 import com.cmcc.newcalllib.manage.entity.WebViewSize
+import com.cmcc.newcalllib.manage.entity.caller.req.CallTypeNotify
+import com.cmcc.newcalllib.manage.entity.caller.req.VisibilityNotify
 import com.cmcc.newcalllib.manage.entity.event.RequestWebViewChangeData
 import com.cmcc.newcalllib.manage.event.EventAppNotify
 import com.cmcc.newcalllib.manage.event.EventInternal
@@ -47,6 +50,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
     private lateinit var mJsCommunicator: JsCommunicator
     private lateinit var mNetworkAdapter: NetworkAdapter
     private lateinit var mNativeAbilityProvider: NativeAbilityProvider
+    private lateinit var mLocalARAdapter: LocalARAdapter
     private lateinit var mExtensionManager: ExtensionManager
     private lateinit var mMiniAppManager: MiniAppManager
     private lateinit var mHandler: MainThreadEventHandler
@@ -61,6 +65,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
     private var mHasBsPageShownInPreCall = false
     private var mHasBsPageShownInInCall = false
     private var mHasBsPageShowing = false
+    private var mBootstrapDataChannelCreated = false
 
     private val mCallStateCallback: Call.Callback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
@@ -115,15 +120,28 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
 
     fun setMessageListener(msgListener: MessageListener?) {
         mMsgListener = msgListener
+        if (mMiniAppManager.getBsAppPrepared()) {
+            mMsgListener?.onMessage(NewCallApi.MESSAGE_ON_BOOTSTRAP_READY, "")
+        }
     }
 
     fun setMiniAppChangeListener(miniAppChangeListener: MiniAppChangeListener?) {
         mMiniAppChangeListener = miniAppChangeListener
     }
 
-    fun onLifeCycleChanged(state: LifeCycleState) {
-        mJsCommunicator.visibilityNotify(state.value, null)
-        mExtensionManager.getScreenShareManager().onActivityVisibilityNotify(state.value)
+    fun onActivityLifeCycleChanged(state: LifeCycleState) {
+        mExtensionManager.getScreenShareManager().onActivityLifeCycleChanged(state.value)
+        mExtensionManager.getSTTManager().onActivityLifeCycleChanged(state.value)
+    }
+
+    fun onWebViewVisibilityChanged(visible: Boolean) {
+        mJsCommunicator.visibilityNotify(VisibilityNotify.fromVisible(visible), null)
+    }
+
+    fun onCallTypeChanged(videoState: Int) {
+        val state = CallTypeNotify.fromVideoState(videoState)
+        mJsCommunicator.callTypeNotify(state, null)
+        mExtensionManager.getScreenShareManager().onCallTypeChanged(state)
     }
 
     fun bindInCallUI(activity: Activity?) {
@@ -199,14 +217,16 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
             }
             Call.STATE_CONNECTING, Call.STATE_DIALING, CustomizationCallState.VIVO_ALERTING.state -> {
                 // pre call
-                loadCachedHomePage(newPhase)
+                // update: dialer call render manually
+//                loadCachedHomePage(newPhase)
             }
             Call.STATE_RINGING -> {
 
             }
             Call.STATE_ACTIVE -> {
                 // in call
-                loadCachedHomePage(newPhase)
+                // update: dialer call render manually
+//                loadCachedHomePage(newPhase)
             }
             Call.STATE_HOLDING -> {
             }
@@ -263,7 +283,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
             LogUtil.i("loadCachedHomePage, Bootstrap mini-app already shown")
             return
         }
-        findLocalBsAppThenRender(phase)
+        findLocalBsAppThenRender(phase, Display.APP_LIST)
     }
 
     fun setWebView(webView: CmccBridgeWebView?) {
@@ -275,15 +295,9 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
         if (webView != null) {
             webView.setupWithJsCommunicator(mJsCommunicator)
             webView.setNtvAbilityHandler(mNativeAbilityProvider.provideNtvAbilityHandler())
-            ConfigManager.webViewSize = WebViewSize(webView.width, webView.height)
-            // try render
-            when (mCurrPagePhase) {
-                Phase.PRE_CALL.phaseName -> {
-                    loadCachedHomePage(mCurrPagePhase)
-                }
-                Phase.IN_CALL.phaseName -> {
-                }
-            }
+//            mJsCommunicator.webViewWidth = webView.width
+//            mJsCommunicator.webViewHeight = webView.height
+//            LogUtil.d("setWebView, w=${mJsCommunicator.webViewWidth}, h=${mJsCommunicator.webViewHeight}")
         } else {
             mHasBsPageShownInPreCall = false
             mHasBsPageShownInInCall = false
@@ -316,27 +330,29 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
         LogUtil.w("launchMiniApp not support yet")
     }
 
-    fun showMiniAppList() {
-        LogUtil.d("try showMiniAppList")
-        if (mWebView == null || mCurrPagePhase != Phase.IN_CALL.phaseName) {
-            LogUtil.w("showMiniAppList fail, mWebView=$mWebView")
+    fun showHomePage(display: Int) {
+        LogUtil.d("try showHomePage display=$display")
+        if (mWebView == null) {
+            LogUtil.w("showHomePage fail, mWebView=$mWebView")
             return
         }
         if (mMiniAppManager.getBsAppPrepared()) {
-            findLocalBsAppThenRender(mCurrPagePhase, true)
+            LogUtil.d("showHomePage immediately")
+            findLocalBsAppThenRender(mCurrPagePhase, Display.from(display))
         } else {
-            LogUtil.d("showMiniAppList on listener")
+            LogUtil.d("showHomePage on listener")
             // waiting bootstrap prepared
             mMiniAppManager.setBootstrapMiniAppPrepareListener(object :
                 MiniAppManager.BootstrapMiniAppPrepareListener {
                 override fun onPrepared() {
-                    findLocalBsAppThenRender(mCurrPagePhase, true)
+                    findLocalBsAppThenRender(mCurrPagePhase, Display.from(display))
                 }
             })
         }
     }
 
     fun setScreenShareHandler(handler: ScreenShareHandler) {
+        LogUtil.i("NewCallManager: setScreenShareHandler handler=$handler")
         mExtensionManager.getScreenShareManager().mScreenShareHandler = handler
     }
 
@@ -350,8 +366,8 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
      * find cached bootstrap mini-app first, if exists then render index.html with
      * token and phase
      */
-    private fun findLocalBsAppThenRender(curPhase: String, showAppList: Boolean = false) {
-        LogUtil.i("findLocalBsAppThenRender, curPhase=$curPhase, showList=$showAppList")
+    private fun findLocalBsAppThenRender(curPhase: String, display: Display) {
+        LogUtil.i("findLocalBsAppThenRender, curPhase=$curPhase, display=$display")
         if (mHasBsPageShowing) {
             LogUtil.w("findLocalBsAppThenRender, page loading")
             return
@@ -360,14 +376,9 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
         mMiniAppManager.findBootstrapAppPath(object : Callback<Results<String>> {
             override fun onResult(t: Results<String>) {
                 if (t.getOrNull() != null) {
-                    val queryStr = MiniAppManager.buildBsAppQuery(curPhase)
+                    val queryStr = MiniAppManager.buildBsAppQuery(curPhase, display.display)
                     val path = t.getOrNull()!!
-                    // use route 'applist', or auto launch app by bs app
-                    val ev = if (!showAppList) {
-                        EventRender(path = path, query = queryStr)
-                    } else {
-                        EventRender(path = "$path#/applist", query = queryStr)
-                    }
+                    val ev = EventRender(path = path, query = queryStr)
                     doRender(ev)
                     // update flag
                     updateBsShownFlag(curPhase)
@@ -413,30 +424,30 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
     /**
      * try render bootstrap mini-app, download if not exist or version out of date
      */
-    private fun prepareAndRenderBsApp() {
+    private fun prepareAndRenderBsApp(doRender: Boolean) {
         try {
             getMiniAppManager().prepareBootstrapMiniApp(object :
                 Callback<Results<String>> {
                 override fun onResult(t: Results<String>) {
                     val currState = getCurrState()
                     LogUtil.d("Bootstrap prepare finish, t=$t, curr callState=$currState")
-
                     if (t.isSuccess() && t.getOrNull() != null) {
+                        mMsgListener?.onMessage(NewCallApi.MESSAGE_ON_BOOTSTRAP_READY, "")
                         val path = t.getOrNull()!!
                         if (Phase.isPreCallOrInCall(currState)
-                            && getWebView() != null
+                            && getWebView() != null && doRender
                         ) {
                             // render with phase and token
                             val phase = Phase.fromCallState(currState).phaseName
                             val queryStr = MiniAppManager.buildBsAppQuery(
-                                phase
+                                phase, Display.AUTO_LOAD.display
                             )
                             val ev = EventRender(path, queryStr)
                             doRender(ev)
                             // update flag
                             updateBsShownFlag(phase)
                         } else {
-                            LogUtil.i("Stop render, call state=${callStateToString(currState)}, webView=${getWebView()}")
+                            LogUtil.i("Stop render, call state=${callStateToString(currState)}, webView=${getWebView()}, doRender=$doRender")
                         }
                     } else {
                         LogUtil.e(
@@ -497,8 +508,10 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
                     LogUtil.d("Receive internal event=$event")
                     when (event.eventType) {
                         EventInternal.ET_BOOTSTRAP_CREATED -> {
+                            mBootstrapDataChannelCreated = true
                             // request bootstrap app
-                            prepareAndRenderBsApp()
+                            // update: dialer call render manually
+                            prepareAndRenderBsApp(false)
                         }
                     }
                 }
@@ -517,12 +530,14 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
                     when(event.eventType) {
                         EventAppNotify.ET_REQUEST_WEB_VIEW_CHANGE -> {
                             val data = event.data as RequestWebViewChangeData
-                            if (data.width != null && data.height != null) {
+                            if (data.width != null || data.height != null) {
                                 mMiniAppChangeListener?.requestWebViewSizeChange(data.width, data.height)
-                                ConfigManager.webViewSize = WebViewSize(data.width, data.height)
                             }
                             if (data.visibility != null) {
                                 mMiniAppChangeListener?.requestWebViewVisibilityChange(data.visibility)
+                            }
+                            if (data.horizontalPos != null || data.verticalPos != null) {
+                                mMiniAppChangeListener?.requestWebViewPositionChange(data.horizontalPos, data.verticalPos)
                             }
                         }
                         EventAppNotify.ET_NOTIFY_APP_BY_JS -> {

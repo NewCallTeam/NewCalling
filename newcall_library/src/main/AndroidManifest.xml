@@ -2,15 +2,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cmcc.newcalllib">
 
+    <!--文件共享：读写sdcard权限-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!--Android 13版本适配，细化存储权限-->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <!--文件共享：拍照录制视频-->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!--手机号-->
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!--录制屏幕：前台应用权限-->
+    <!--录制屏幕: 前台应用权限-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!--录制屏幕：悬浮窗权限-->
+    <!--录制屏幕: 悬浮窗权限-->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <!-- 粗略的位置权限 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- 精确的位置权限 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- MTK Service permission -->

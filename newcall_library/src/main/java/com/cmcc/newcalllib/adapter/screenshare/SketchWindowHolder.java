@@ -302,7 +302,7 @@ public class SketchWindowHolder {
     private void addSketchView(@SketchWindowHolder.CallType int callType) {
         //设置悬浮窗布局属性
         if (mWindowManager != null) {
-            LogUtil.INSTANCE.d("SketchWindowHolder","SketchWindow is showing");
+            LogUtil.INSTANCE.d("SketchWindowHolder: SketchWindow is showing");
             return;
         }
         mWindowManager = (WindowManager) mActivity.getSystemService(Context.WINDOW_SERVICE);
@@ -373,28 +373,36 @@ public class SketchWindowHolder {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(View view) {
-                LogUtil.INSTANCE.d(TAG, "mScreenShareExitBtn click");
+                LogUtil.INSTANCE.d("SketchWindowHolder: mScreenShareExitBtn click");
                 // 隐藏涂鸦窗口
-                setSketchViewVisibility(false);
-                // 显示退出提示框
-                Dialog dialog = DialogTools.showTipDialog(mActivity, "提醒", "确认要退出屏幕共享吗！", "确定", "取消", new DialogTools.DialogBtnClickCallBack() {
-                    @Override
-                    public void onSure(Dialog dialog) {
-                        // 停止屏幕共享
-                        if (mCallback != null) {
-                            mCallback.onExitScreenShareBtnClick(callType);
-                        }
-                        //
-                        dialog.cancel();
+                try {
+                    setSketchViewVisibility(false);
+                    // 停止屏幕共享
+                    if (mCallback != null) {
+                        mCallback.onExitScreenShareBtnClick(callType);
                     }
-
-                    @Override
-                    public void onCancel(Dialog dialog) {
-                        // 取消：没权限
-                        dialog.cancel();
-                    }
-                });
-                dialog.show();
+                }catch (Exception e){
+                    e.printStackTrace();
+                    LogUtil.INSTANCE.e("SketchWindowHolder: mScreenShareExitBtn onClick Exception",e);
+                }
+//                Dialog dialog = DialogTools.showTipDialog(mActivity, "提醒", "确认要退出屏幕共享吗！", "确定", "取消", new DialogTools.DialogBtnClickCallBack() {
+//                    @Override
+//                    public void onSure(Dialog dialog) {
+//                        // 停止屏幕共享
+//                        if (mCallback != null) {
+//                            mCallback.onExitScreenShareBtnClick(callType);
+//                        }
+//                        //
+//                        dialog.cancel();
+//                    }
+//
+//                    @Override
+//                    public void onCancel(Dialog dialog) {
+//                        // 取消：没权限
+//                        dialog.cancel();
+//                    }
+//                });
+//                dialog.show();
             }
         });
         // 涂鸦开关
@@ -405,8 +413,14 @@ public class SketchWindowHolder {
             public void onClick(View view) {
                 // 准备：屏幕涂鸦
                 // 显示 || 隐藏
-                boolean visible = (mSketchLayout.getVisibility() != View.VISIBLE);
-                setSketchViewVisibility(visible);
+                try {
+                    boolean visible = (mSketchLayout.getVisibility() != View.VISIBLE);
+                    setSketchViewVisibility(visible);
+                }catch (Exception e){
+                    e.printStackTrace();
+                    LogUtil.INSTANCE.e("SketchWindowHolder: mSketchSwitchBtn onClick Exception",e);
+                }
+
             }
         });
     }
