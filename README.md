@@ -1,4 +1,4 @@
-# NewCall_Library 1.0.0
+# NewCall_Library
 
 新通话终端套件，为支撑新通话业务而开发，免费贡献给新通话产业，终端厂家、芯片厂家、三方开发者可以基于开源版本进行二次开发，定制添加自定义需求，充分发挥运营商网络强大能力。  
 Develop by NewCall Team, Contribute to NewCall Bussiness.
@@ -16,22 +16,24 @@ allprojects {
         // 添加maven jitpack
         maven { url "https://jitpack.io" }
     }
-    // 引用AwesomeNewCall
+    // 引用NewCalling
     dependencies {
         // Spreadtrum 展锐平台
-        implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT:Spreadtrum'
+        implementation 'com.github.NewCallTeam:NewCalling:master-SNAPSHOT:Spreadtrum'
         // Mtk 芯片平台
-        //implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT:Mtk'
+        //implementation 'com.github.NewCallTeam:NewCalling:master-SNAPSHOT:Mtk'
         // Qcom 高通平台
-        //implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT:Qcom'
+        //implementation 'com.github.NewCallTeam:NewCalling:master-SNAPSHOT:Qualcomm'
+        // Qcom 高通平台 中兴终端
+        //implementation 'com.github.NewCallTeam:NewCalling:master-SNAPSHOT:QualcommZTE'
         // Samsung 三星平台
-        //implementation 'com.github.NewCallTeam:AwesomeNewCall:master-SNAPSHOT:Samsung'
+        //implementation 'com.github.NewCallTeam:NewCalling:master-SNAPSHOT:Samsung'
     }
 }
 
 
 dependencies {
-    // AwesomeNewCall 引用的三方依赖包：
+    // NewCalling 引用的三方依赖包：
     // gson
     implementation 'com.google.code.gson:gson:2.8.6'
     // bolts
@@ -49,18 +51,25 @@ dependencies {
 ## 权限
 
 ```c
-<!--写sdcard权限-->  
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />  
-<!--手机号-->  
-<uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />  
-<uses-permission android:name="android.permission.READ_PHONE_STATE" />  
-<!--录制屏幕: 前台应用权限-->  
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />  
-<!--录制屏幕: 悬浮窗权限-->  
-<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>  
-<!-- 粗略的位置权限 -->  
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />  
-<!-- 精确的位置权限 -->  
+<!--文件共享：读写sdcard权限-->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<!--Android 13版本适配，细化存储权限-->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+<uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+<!--文件共享：拍照录制视频-->
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.CAMERA" />
+<!--手机号-->
+<uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<!--录制屏幕: 前台应用权限-->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<!--录制屏幕: 悬浮窗权限-->
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+<!-- 粗略的位置权限 -->
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```  
 
