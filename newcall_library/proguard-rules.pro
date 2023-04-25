@@ -28,7 +28,8 @@
 -keep class com.cmcc.newcalllib.manage.support.ConfigManager {*;}
 # 避免混淆JavascriptBridge对象
 -keep class com.cmcc.newcalllib.bridge.LegacyJsBridge {*;}
-
+# 避免混淆AIDL类
+-keep class com.cmcc.newcalllib.datachannel.** {*;}
 
 # 避免混淆Android基本组件
 -keep public class * extends android.app.Activity

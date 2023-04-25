@@ -134,15 +134,14 @@ class ImsDCNetworkAdapter(
         callId: String,
         callback: Callback<Results<Map<String, Int?>>>?
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: createDataChannel.")
-        LogUtil.d("ImsDCNetworkAdapter: dcLabels size: ${dcLabels.size}")
+        LogUtil.d("ImsDCNetworkAdapter: createDataChannel. dcLabelsSize=${dcLabels.size} dcDescription=$dcDescription")
         // check cached dc map first
         val newDcLabels = mutableListOf<String>()
         val createDCResultMap = ConcurrentHashMap<String, Int>()
         dcLabels.forEach {
             createDCResultMap[it] = DEFAULT_STATE
             if (isDcMapContainsLabel(it, mDataChannelMap)) {
-                LogUtil.d("ImsDCNetworkAdapter: label:$it in mDataChannelMap")
+                LogUtil.d("ImsDCNetworkAdapter: label=$it in mDataChannelMap")
                 val pair = getFromDcMap(it, mDataChannelMap)
                 if (pair?.second?.state == ImsDCStatus.DC_STATE_CONNECTING) {
                     createDCResultMap[it] = CREATE_DC_ALREADY
@@ -177,12 +176,13 @@ class ImsDCNetworkAdapter(
         callId: String,
         callback: Callback<Results<Map<String, Int>>>?
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: closeDataChannel.")
+        LogUtil.d("ImsDCNetworkAdapter: closeDataChannel. dcLabelsSize=${dcLabels.size} ")
         LogUtil.d("ImsDCNetworkAdapter: closeDataChannel, before $mDataChannelMap")
         // register listener for DC close
         val newImsDataChannels = mutableListOf<String>()
         val closeDCResultMap = ConcurrentHashMap<String, Int>()
         dcLabels.forEach {
+            LogUtil.d("ImsDCNetworkAdapter: closeDataChannel, dcLabel $it")
             closeDCResultMap[it] = DEFAULT_STATE
             if (isDcMapContainsLabel(it, mDataChannelMap)) {
                 val pair = getFromDcMap(it, mDataChannelMap)
@@ -219,7 +219,7 @@ class ImsDCNetworkAdapter(
 
         // update map
         filterKeys.keys.forEach(mDataChannelMap::remove)
-        LogUtil.d("ImsDCNetworkAdapter: closeDataChannel, after $mDataChannelMap")
+        LogUtil.d("ImsDCNetworkAdapter: closeDataChannel, end $mDataChannelMap")
     }
 
     /**
@@ -231,7 +231,7 @@ class ImsDCNetworkAdapter(
         slotId: Int,
         callId: String
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: respondDataChannelSetupRequest. dcLabels: $dcLabels accepted: $accepted slotId: $slotId callId: $callId")
+        LogUtil.d("ImsDCNetworkAdapter: respondDataChannelSetupRequest. dcLabels=$dcLabels accepted=$accepted slotId=$slotId callId=$callId")
         // 调用IMS进程提供的接口，同意建立DC通道
         mImsDcManager.responseImsDcSetupRequest(
             dcLabels,
@@ -250,14 +250,14 @@ class ImsDCNetworkAdapter(
         formFileList: List<File?>?,
         callback: HttpRequestCallback
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: sendHttpGet. label: $label url: $url headerMap: $headerMap formBodyMap: $formBodyMap formFileList: $formFileList")
+        LogUtil.d("ImsDCNetworkAdapter: sendHttpGet. label=$label url=$url headerMap=$headerMap formBodyMap=$formBodyMap formFileList=$formFileList")
         if (isDcMapContainsLabel(label, mHttpRequestCallbacks)) {
-            LogUtil.e("ImsDCNetworkAdapter: Repeated request!!! label: $label url: $url", null)
+            LogUtil.e("ImsDCNetworkAdapter: sendHttpGet. Repeated request!!! label=$label url=$url", null)
             // 回调错误信息
             callback.onSendDataCallback(-1, -1)
             callback.onMessageCallback(
                 -1,
-                "Only one request can be made in the same time period. label: $label url: $url",
+                "Only one request can be made in the same time period. label=$label url=$url",
                 null,
                 null
             )
@@ -270,15 +270,15 @@ class ImsDCNetworkAdapter(
         var channelPair = getFromDcMap(label, mDataChannelMap)
         val state = channelPair?.first
         val dc = channelPair?.second
-        LogUtil.d("ImsDCNetworkAdapter: mDataChannelMap: $mDataChannelMap")
+        LogUtil.d("ImsDCNetworkAdapter: sendHttpGet. mDataChannelMap=$mDataChannelMap")
         LogUtil.d(
-            "ImsDCNetworkAdapter: dcInfo: dcLabel: ${dc?.dcLabel} " +
-                    " dcStreamId: ${dc?.streamId}  dcType: ${dc?.dcType}  dcState: ${dc?.state}" +
-                    " dcSubProtocol: ${dc?.subProtocol}  dcCallId: ${dc?.callId}" +
-                    " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            "ImsDCNetworkAdapter: sendHttpGet. dcInfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId}  dcType=${dc?.dcType}  dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol}  dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}"
         )
         if (dc == null) {
-            LogUtil.d("ImsDCNetworkAdapter: Error: failed to sendHttp. dc was not found!!!  label=$label url=$url")
+            LogUtil.d("ImsDCNetworkAdapter:sendHttpGet. Error: failed to sendHttp. dc was not found!!!  label=$label url=$url")
             return
         }
         /**
@@ -307,19 +307,19 @@ class ImsDCNetworkAdapter(
      */
     override fun sendDataOnAppDC(label: String, data: String, callback: RequestCallback) {
         val byteBuffer = HttpStackBufferUtil.getByteBuffer(data)
-        LogUtil.d("ImsDCNetworkAdapter: sendDataOverAppDc. label: $label data: $data")
+        LogUtil.d("ImsDCNetworkAdapter: sendDataOverAppDc. label=$label data=$data")
         /**
          * 获取当前的dc
          */
         var channelPair = getFromDcMap(label, mDataChannelMap)
         val dcStatus = channelPair?.first
         val dc = channelPair?.second
-        LogUtil.d("ImsDCNetworkAdapter: mDataChannelMap: $mDataChannelMap")
+        LogUtil.d("ImsDCNetworkAdapter: sendDataOverAppDc.mDataChannelMap=$mDataChannelMap")
         LogUtil.d(
-            "ImsDCNetworkAdapter: dcInfo: dcLabel: ${dc?.dcLabel} " +
-                    " dcStreamId: ${dc?.streamId} dcType: ${dc?.dcType} dcState: ${dc?.state}" +
-                    " dcSubProtocol: ${dc?.subProtocol} dcCallId: ${dc?.callId}" +
-                    " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            "ImsDCNetworkAdapter: sendDataOverAppDc. dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}"
         )
         if (dc == null) {
             LogUtil.d("ImsDCNetworkAdapter: Error: failed to sendData. dc was not found!!!  label=$label data=$data")
@@ -348,13 +348,19 @@ class ImsDCNetworkAdapter(
         byteBuffer: ByteBuffer,
         requestCallback: RequestCallback?
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: doSendByteBuffer")
+        LogUtil.d("ImsDCNetworkAdapter: doSendByteBuffer.")
+        LogUtil.d(
+            "ImsDCNetworkAdapter: doSendByteBuffer. dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}"
+        )
         val data = byteBuffer.array()
-        LogUtil.d("ImsDCNetworkAdapter: buffer.size: ${data.size}")
+        LogUtil.d("ImsDCNetworkAdapter: buffer.size=${data.size}")
         dc?.send(data, data.size, object : IDCSendDataCallback.Stub() {
             @Throws(RemoteException::class)
             override fun onSendDataResult(state: Int, errorcode: Int) {
-                LogUtil.d("ImsDCNetworkAdapter:onSendDataResult: state: $state errorcode: $errorcode")
+                LogUtil.d("ImsDCNetworkAdapter:onSendDataResult: state=$state errorcode=$errorcode")
                 // 回调发送状态
                 requestCallback?.onSendDataCallback(state, errorcode)
             }
@@ -365,17 +371,21 @@ class ImsDCNetworkAdapter(
      * SDK进程 通知 IMS进程: dc 可用状态查询
      */
     override fun isDataChannelAvailable(label: String): Boolean {
-        LogUtil.d("ImsDCNetworkAdapter: isDataChannelAvailable label: $label")
+        LogUtil.d("ImsDCNetworkAdapter: isDataChannelAvailable label=$label")
         /**
          * 获取当前的dc
          */
         var channelPair = getFromDcMap(label, mDataChannelMap)
         val dcType = channelPair?.first
         val dc = channelPair?.second
-        LogUtil.d("ImsDCNetworkAdapter: mDataChannelMap: $mDataChannelMap")
-        LogUtil.d("ImsDCNetworkAdapter: channelPair: $channelPair")
-        LogUtil.d("ImsDCNetworkAdapter: dcType: $dcType")
-        LogUtil.d("ImsDCNetworkAdapter: dc: $dc")
+        LogUtil.d("ImsDCNetworkAdapter: mDataChannelMap=$mDataChannelMap")
+        LogUtil.d("ImsDCNetworkAdapter: channelPair=$channelPair")
+        LogUtil.d("ImsDCNetworkAdapter: dcType=$dcType")
+        LogUtil.d("dcinfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}"
+        )
         if (dc?.state == ImsDCStatus.DC_STATE_OPEN) {
             return true;
         }
@@ -395,7 +405,7 @@ class ImsDCNetworkAdapter(
             slotId: Int,
             callId: String
         ) {
-            LogUtil.d("ImsDCNetworkAdapter: onImsDataChannelSetupRequest. dcLabels: $dcLabels slotId: $slotId callId: $callId")
+            LogUtil.d("ImsDCNetworkAdapter: onImsDataChannelSetupRequest. dcLabels=$dcLabels slotId=$slotId callId=$callId")
             // IMS进程 通知 SDK进程: 对方要求建立dc通道的请求
             this@ImsDCNetworkAdapter.onImsDcSetupRequest(dcLabels, slotId, callId)
         }
@@ -417,7 +427,7 @@ class ImsDCNetworkAdapter(
             slotId: Int,
             callId: String
         ) {
-            LogUtil.d("ImsDCNetworkAdapter: onBoostrapDataChannelResponse. slotId: $slotId callId: $callId")
+            LogUtil.d("ImsDCNetworkAdapter: onBoostrapDataChannelResponse. slotId=$slotId callId=$callId")
             // IMS进程 通知 SDK进程: Bootstrap DC的建立、DC状态变化
             if (dc != null) {
                 this@ImsDCNetworkAdapter.onImsDcStatusCallback(dc, dc.state, slotId, callId)
@@ -429,7 +439,7 @@ class ImsDCNetworkAdapter(
             slotId: Int,
             callId: String
         ) {
-            LogUtil.d("ImsDCNetworkAdapter: onApplicationDataChannelResponse. slotId: $slotId callId: $callId")
+            LogUtil.d("ImsDCNetworkAdapter: onApplicationDataChannelResponse. slotId=$slotId callId=$callId")
             // IMS进程 通知 SDK进程: Application DC的建立、DC状态变化
             if (dc != null) {
                 this@ImsDCNetworkAdapter.onImsDcStatusCallback(dc, dc.state, slotId, callId)
@@ -446,7 +456,7 @@ class ImsDCNetworkAdapter(
     private fun onImsDcSetupRequest(
         dcLabels: Array<String>, slotId: Int, callId: String
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: onImsDcSetupRequest. dcLabels: $dcLabels slotId: $slotId callId: $callId ")
+        LogUtil.d("ImsDCNetworkAdapter: onImsDcSetupRequest. dcLabels=$dcLabels slotId=$slotId callId=$callId ")
         // 1、IMS进程 通知 SDK进程: 呼叫方要求建立一个APP DC 数据通道；
         // 2、这里调用SDK进程 onImsDataChannelSetupRequest 咨询SDK进程，是否同意；
         // 3、若同意 SDK进程 调用 IMS进程方法 respondDataChannelSetupRequest
@@ -463,16 +473,16 @@ class ImsDCNetworkAdapter(
     private fun onImsDcStatusCallback(
         dc: IImsDataChannel, status: ImsDCStatus, slotId: Int, callId: String
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: onImsDcStatusCallback. status: $status slotId: $slotId callId: $callId")
         LogUtil.d(
-            "ImsDCNetworkAdapter: dcLabel: ${dc?.dcLabel} " +
-                    " dcStreamId: ${dc?.streamId} dcType: ${dc?.dcType} dcState: ${dc?.state}" +
-                    " dcSubProtocol: ${dc?.subProtocol} dcCallId: ${dc?.callId}" +
-                    " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            "ImsDCNetworkAdapter: onImsDcStatusCallback. dcInfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}" +
+                    " param: slotId=$slotId callId=$callId"
         )
         // 获取dc label
         var dcLabel = Constants.getDcLable(dc);
-        LogUtil.d("ImsDCNetworkAdapter: dcLabel: $dcLabel")
+        LogUtil.d("ImsDCNetworkAdapter: onImsDcStatusCallback findBootOrAppDcLabel $dcLabel")
         // 回调DC状态
         when (status) {
             // CONNECTING
@@ -486,7 +496,7 @@ class ImsDCNetworkAdapter(
                 registerDcMsgObserver(dc, status, slotId, callId)
                 // 获取 记录的 state状态
                 val mapDcState = getFromDcMap(dcLabel, mDataChannelMap)?.first
-                LogUtil.d("ImsDCNetworkAdapter: mapDcState $mapDcState")
+                LogUtil.d("ImsDCNetworkAdapter: mapDcState=$mapDcState")
                 // 已经OPEN过，则不再OPEN (三星存在多次OPEN的情况)
                 //if (mapDcState?.toInteger() != ImsDCStatus.DC_STATE_OPEN.toInteger()) {
                 // boot dc: notify bootstrap dc created. react only on local BDC
@@ -544,18 +554,18 @@ class ImsDCNetworkAdapter(
         slotId: Int,
         callId: String
     ) {
-        LogUtil.d("ImsDCNetworkAdapter: registerDcMsgObserver.")
         LogUtil.d(
-            "ImsDCNetworkAdapter: dcLabel: ${dc?.dcLabel} " +
-                    " dcStreamId: ${dc?.streamId} dcType: ${dc?.dcType} dcState: ${dc?.state}" +
-                    " dcSubProtocol: ${dc?.subProtocol} dcCallId: ${dc?.callId}" +
-                    " dcBufferedAmount: ${dc?.bufferedAmount()}"
+            "ImsDCNetworkAdapter: registerDcMsgObserver. dcInfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}" +
+                    " param: imsDCStatus=$imsDCStatus slotId=$slotId callId=$callId"
         )
         val dcLabel = Constants.getDcLable(dc)
-        LogUtil.d("ImsDCNetworkAdapter: dcLabel: $dcLabel")
+        LogUtil.d("ImsDCNetworkAdapter: registerDcMsgObserver findBootOrAppDcLabel $dcLabel")
         // 若已经注册过，则不再注册；
         if (isDcMapContainsLabel(dcLabel, mDataChannelMap)) {
-            LogUtil.d("ImsDCNetworkAdapter: DC observer have been registered!!!  dcLabel: $dcLabel")
+            LogUtil.d("ImsDCNetworkAdapter: DC observer have been registered!!!  dcLabel=$dcLabel")
             return;
         }
         // 如果没有注册过，先保存DC，再注册消息回调；
@@ -564,39 +574,39 @@ class ImsDCNetworkAdapter(
         dc.registerObserver(object : IImsDCObserver.Stub() {
             override fun onDataChannelStateChange(status: ImsDCStatus) {
                 // bdc状态变化
-                LogUtil.d("ImsDCNetworkAdapter: ImsDCObserver.onDataChannelStateChange. status: $status status: ${status.toInteger()}")
+                LogUtil.d("ImsDCNetworkAdapter: ImsDCObserver.onDataChannelStateChange. status=$status status=${status.toInteger()}")
                 onImsDcStatusCallback(dc, status, slotId, callId)
             }
 
             override fun onMessage(data: ByteArray?, length: Int) {
                 // bdc返回的消息数据
-                LogUtil.d("ImsDCNetworkAdapter: ImsDCObserver.onMessage. data: $data ,length: $length")
-                LogUtil.d("ImsDCNetworkAdapter: data.size: ${data?.size}")
+                LogUtil.d("ImsDCNetworkAdapter: onMessage. data=$data ,length=$length")
+                LogUtil.d("ImsDCNetworkAdapter: onMessage. data.size=${data?.size}")
                 LogUtil.d(
-                    "ImsDCNetworkAdapter: dcLabel: ${dc.dcLabel} " +
-                            "+ streamId: ${dc.streamId}+ dcType: ${dc.dcType}+ state: ${dc.state}" +
-                            "+ subProtocol: ${dc.subProtocol}+ callId: ${dc.callId}" +
-                            "+ bufferedAmount: ${dc.bufferedAmount()}"
+                    "ImsDCNetworkAdapter: onMessage. dcLabel=${dc.dcLabel} " +
+                            "+ streamId=${dc.streamId}+ dcType=${dc.dcType}+ state=${dc.state}" +
+                            "+ subProtocol=${dc.subProtocol}+ callId=${dc.callId}" +
+                            "+ bufferedAmount=${dc.bufferedAmount()}"
                 )
                 //
                 val byteBuffer = ByteBuffer.wrap(data)
                 var handled = false
                 val callback: (buffer: ByteBuffer) -> Any = { aggregated ->
-                    LogUtil.d("ImsDCNetworkAdapter: callback.dcLabel: $dcLabel")
+                    LogUtil.d("ImsDCNetworkAdapter: callback.dcLabel=$dcLabel")
                     // handled by interceptor
                     mDataInterceptors
                         .filter {
-                            LogUtil.d("ImsDCNetworkAdapter: filter.provideDcLabel: ${it.provideDataChannelLabel()}")
+                            LogUtil.d("ImsDCNetworkAdapter: filter.provideDcLabel=${it.provideDataChannelLabel()}")
                             it.provideDataChannelLabel() == dcLabel
                         }
                         .forEach {
                             if (!handled) {
                                 handled = it.onDataArrive(aggregated)
                             }
-                            LogUtil.d("ImsDCNetworkAdapter: forEach.provideDcLabel: ${it.provideDataChannelLabel()}")
-                            LogUtil.d("ImsDCNetworkAdapter: forEach.onDataArrive: $handled")
+                            LogUtil.d("ImsDCNetworkAdapter: forEach.provideDcLabel=${it.provideDataChannelLabel()}")
+                            LogUtil.d("ImsDCNetworkAdapter: forEach.onDataArrive=$handled")
                         }
-                    LogUtil.d("ImsDCNetworkAdapter: handled: $handled")
+                    LogUtil.d("ImsDCNetworkAdapter: handled=$handled")
                     // un handle
                     if (!handled) {
                         // 回调请求数据
@@ -629,11 +639,11 @@ class ImsDCNetworkAdapter(
      * 回调 http1.1 Get Response 请求数据
      */
     private fun onHttpGetResponse(label: String, buffer: ByteBuffer) {
-        LogUtil.d("ImsDCNetworkAdapter: onHttpGetResponse label: $label")
+        LogUtil.d("ImsDCNetworkAdapter: onHttpGetResponse. label=$label")
         try {
             // 从二进制字节流中解析 Http Response 消息数据
             var response = HttpStack.decodeHttpResponse(buffer);
-            LogUtil.d("ImsDCNetworkAdapter: response: $response ")
+            LogUtil.d("ImsDCNetworkAdapter: response=$response ")
             // 打印http网络请求数据
             val code = response.code()
             var msg = response.message()
@@ -645,10 +655,10 @@ class ImsDCNetworkAdapter(
             LogUtil.d("ImsDCNetworkAdapter: HttpResponse-BodyByteLength: ${responseBodyBytes.size} ")
             HttpStackUtil.printHttpByteArray(response?.headers()?.get("Content-Type"), responseBodyBytes)
             //
-            LogUtil.d("ImsDCNetworkAdapter: mHttpRequestCallbacks: $mHttpRequestCallbacks")
+            LogUtil.d("ImsDCNetworkAdapter: mHttpRequestCallbacks=$mHttpRequestCallbacks")
             var callback = getFromDcMap(label, mHttpRequestCallbacks)
             if (callback == null) {
-                LogUtil.d("ImsDCNetworkAdapter: Error: callback was not found!!! dcLabel: $label mHttpRequestCallbacks: $mHttpRequestCallbacks")
+                LogUtil.d("ImsDCNetworkAdapter: Error: callback was not found!!! dcLabel=$label mHttpRequestCallbacks=$mHttpRequestCallbacks")
                 return;
             }
             // 回调 http 请求数据
@@ -657,12 +667,13 @@ class ImsDCNetworkAdapter(
                 response.message(),
                 headers, responseBodyBytes
             )
-            // 移除请求request
-            mHttpRequestCallbacks.remove(label)
-            LogUtil.d("ImsDCNetworkAdapter: mHttpRequestCallbacks.remove dcLabel: $label ")
         } catch (e: Exception) {
             e.printStackTrace()
             LogUtil.e("ImsDCNetworkAdapter: Exception", e)
+        } finally {
+            // 移除请求request
+            LogUtil.d("ImsDCNetworkAdapter: mHttpRequestCallbacks.remove dcLabel=$label ")
+            mHttpRequestCallbacks.remove(label)
         }
     }
 
@@ -672,9 +683,15 @@ class ImsDCNetworkAdapter(
      * 更新 Map 中记录的 DC 状态
      */
     private fun updateDcMapStatus(dc: IImsDataChannel, imsDCStatus: ImsDCStatus) {
-        LogUtil.d("ImsDCNetworkAdapter: updateDcMapStatus.")
+        LogUtil.d(
+            "ImsDCNetworkAdapter: updateDcMapStatus. dcInfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}" +
+                    " param: imsDCStatus=$imsDCStatus")
         // 获取dc label
         var dcLabel = Constants.getDcLable(dc);
+        LogUtil.d("ImsDCNetworkAdapter: updateDcMapStatus findBootOrAppDcLabel $dcLabel")
         /**
          * 获取当前的dc
          */
@@ -693,8 +710,14 @@ class ImsDCNetworkAdapter(
      * 取消dc数据的回调
      */
     private fun unregisterDcObserver(dc: IImsDataChannel) {
-        LogUtil.d("ImsDCNetworkAdapter: unregisterDcObserver.")
+        LogUtil.d(
+            "ImsDCNetworkAdapter: unregisterDcObserver. dcInfo: dcLabel=${dc?.dcLabel} " +
+                    " dcStreamId=${dc?.streamId} dcType=${dc?.dcType} dcState=${dc?.state}" +
+                    " dcSubProtocol=${dc?.subProtocol} dcCallId=${dc?.callId}" +
+                    " dcBufferedAmount=${dc?.bufferedAmount()}"
+        )
         val dcLabel = Constants.getDcLable(dc)
+        LogUtil.d("ImsDCNetworkAdapter: unregisterDcObserver findBootOrAppDcLabel $dcLabel")
         // 查找对应的dc
         var channelPair = getFromDcMap(dcLabel, mDataChannelMap)
         if (channelPair != null) {

@@ -278,10 +278,10 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
                     if (mActivity == null) {
                         return
                     }
-                    // Dialog 按钮确认: 退出屏幕共享
-                    disableScreenShare()
                     // 发送退出消息
                     sendWindowExitData();
+                    // Dialog 按钮确认: 退出屏幕共享
+                    disableScreenShare()
                 }
 
                 override fun onSketchEvent(sketchView: SketchView, event: Int, callType: Int) {
@@ -452,20 +452,7 @@ class ScreenShareManager(private val extensionManager: ExtensionManager) :
         LogUtil.d("ScreenShareManager: sketchCmdJsonData: $sketchCmdJsonData")
         LogUtil.d("ScreenShareManager: base64Data: $base64Data")
         // 发送数据
-        sendSketchDataByDc(mScreenShareDcLabel!!, base64Data,
-            object : NetworkAdapter.RequestCallback {
-                override fun onSendDataCallback(statusCode: Int, errorCode: Int) {
-                    // UI_Thread
-                    Task.call({
-                        if (statusCode < 1) {
-                            Toast.makeText(mActivity, "DC退出消息发送失败: $errorCode", Toast.LENGTH_SHORT)
-                                .show()
-                            true
-                        }
-                        true
-                    }, Task.UI_THREAD_EXECUTOR)
-                }
-            })
+        sendSketchDataByDc(mScreenShareDcLabel!!, base64Data, null)
     }
 
     /**

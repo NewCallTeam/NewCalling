@@ -93,6 +93,10 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
         initExtManager(context)
         initMiniAppManager(context)
         initJsCommunicator()
+
+        // init call type
+        mJsCommunicator.theCallType = CallTypeNotify.fromVideoState(call.details.videoState)
+        LogUtil.d("init, theCallType: ${mJsCommunicator.theCallType}")
         return true
     }
 
@@ -156,6 +160,7 @@ class NewCallManager(override val sessionId: String, private val callInfo: CallI
                 networkConfig = NetworkConfig.Builder()
                     .setHost("")
                     .setSlotId(callInfo.slotId)
+                    .setCallId(callInfo.callId)
                     .setBufferAmount(ConfigManager.dcBufferAmountSize)
                     .build(),
                 labelDecorator = LabelDecoratorImpl()

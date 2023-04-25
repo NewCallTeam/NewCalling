@@ -100,23 +100,29 @@ public class TranslateWindowHolder {
     /**
      * 检测悬浮窗权限，启动悬浮窗
      */
-    public void showTranslateWindow(TranslateBean bean) {
+    public boolean showTranslateWindow(TranslateBean bean) {
         this.mTranslateBean = bean;
         if (mActivity == null) {
-            return;
+            return false;
         }
-        if (mTranslateBean == null) {
-            return;
+        // 数据有问题：不展示
+        if (mTranslateBean == null || mTranslateBean.getBody() == null) {
+            return false;
+        }
+        // 不是最终结果：不展示
+        String speechRecogType = mTranslateBean.getBody().getSpeechRecogType();
+        if (!"1".equals(speechRecogType)) {
+            return false;
         }
         // 没有悬浮窗权限，展示悬浮窗权限申请
         if (!Settings.canDrawOverlays(mActivity)) {
             showWindowTipOnUiThread();
-            return;
+            return false;
         }
         // 初始化UI
         initTranslateView();
         // 更新UI
-        updateTranslateView(bean);
+        return updateTranslateView(bean);
     }
 
     /**
@@ -161,17 +167,20 @@ public class TranslateWindowHolder {
      *
      * @param bean
      */
-    private void updateTranslateView(TranslateBean bean) {
+    private boolean updateTranslateView(TranslateBean bean) {
         if (mWindowManager == null || mActivity == null) {
-            return;
+            return false;
         }
         // 没有数据，不做UI刷新
         if (bean == null || bean.getBody() == null) {
             LogUtil.INSTANCE.d("TranslateWindowHolder: bean == null || bean.getBody() == null!!!  data: " + bean);
-            return;
+            return false;
         }
         TranslateBodyBean body = bean.getBody();
-
+        String speechRecogType = body.getSpeechRecogType();
+        if (!"1".equals(speechRecogType)) {
+            return false;
+        }
         // 显示时间
         long time = (body.getTime() > 0) ? body.getTime() : System.currentTimeMillis();
         mTimeTv.setText(TimeUtil.getFormatHHMM(time));
@@ -192,6 +201,7 @@ public class TranslateWindowHolder {
         } else {
             LogUtil.INSTANCE.d("TranslateWindowHolder: Error displaying UI!!!  data: " + bean);
         }
+        return true;
     }
 
     /**

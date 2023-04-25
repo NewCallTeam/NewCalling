@@ -80,14 +80,14 @@ class STTManager(private val extensionManager: ExtensionManager) :
 
             override fun onDataArrive(data: ByteBuffer): Boolean {
                 LogUtil.d("STTManager: onDataArrive. dcLabel: $dcLabel")
-                val dataJson: String = data.toStr()
-                LogUtil.d("STTManager:dataJson: $dataJson")
+                mTranslateJsonData = data.toStr()
+                LogUtil.d("STTManager: dataJson= $mTranslateJsonData")
                 // 收到智能翻译数据
                 if (mTranslateWindowHolder == null) {
                     LogUtil.d("STTManager uninit. please call enableSTT !!!")
                     return true
                 }
-                updateTranslateUI(dataJson, mTranslateTextSize);
+                updateTranslateUI(mTranslateJsonData, mTranslateTextSize);
                 return true
             }
         })
@@ -117,11 +117,16 @@ class STTManager(private val extensionManager: ExtensionManager) :
         initTranslateControlWindow()
         // 更新字体大小
         updateTranslateUI(mTranslateJsonData, mTranslateTextSize)
+        //
+        callback?.onResult(Results(true))
     }
 
     override fun disableSTT(callback: Callback<Results<Boolean>>?) {
         LogUtil.d("STTManager: disableSTT")
+        //
         exitTranslateControlWindow()
+        //
+        callback?.onResult(Results(true))
         mTranslateWindowHolder = null
     }
 
@@ -215,21 +220,33 @@ class STTManager(private val extensionManager: ExtensionManager) :
             Task.call(
                 {
                     // 1、解析收到的数据
-                    Gson().fromJson(data, TranslateBean::class.java)
+                    val jsonObject = JSONObject(data)
+                    val innerUrlStr = jsonObject.getString("innerUrl")
+                    val msgIdStr = jsonObject.getString("msgId")
+                    val bodyStr = jsonObject.getString("body")
+                    LogUtil.d("STTManager: innerUrlStr=$innerUrlStr msgIdStr=$msgIdStr bodyStr=$bodyStr")
+                    // 构造数据对象
+                    val translateBean = TranslateBean()
+                    translateBean.innerUrl = innerUrlStr
+                    translateBean.msgId = msgIdStr
+                    translateBean.body = Gson().fromJson(bodyStr, TranslateBodyBean::class.java)
+                    translateBean
                 }, Task.BACKGROUND_EXECUTOR
             )
                 .continueWith<Boolean>(
                     { task ->
                         // 2、主线程更新UI
-                        val error = task.error
                         val receiveBean = task.result
-                        LogUtil.d("STTManager: error=$error")
                         LogUtil.d("STTManager: receiveBean=$receiveBean")
-                        // 1、检测悬浮窗权限 & 2、展示悬浮窗；
-                        mTranslateWindowHolder?.showTranslateWindow(receiveBean)
-                        // 2、更新字体大小
-                        if (txtSizeSp > 0) {
-                            mTranslateWindowHolder?.updateTranslateTextSize(txtSizeSp)
+                        if (receiveBean != null && receiveBean.body != null) {
+                            // 1、检测悬浮窗权限 & 2、展示悬浮窗；
+                            val flag = mTranslateWindowHolder?.showTranslateWindow(receiveBean)
+                            // 2、更新字体大小
+                            if (flag == true && txtSizeSp > 0) {
+                                mTranslateWindowHolder?.updateTranslateTextSize(txtSizeSp)
+                            }
+                            // 3、回消息
+                            sendResponseMsg(mTranslateDcLabel, receiveBean);
                         }
                         // 3、回消息
                         sendResponseMsg(mTranslateDcLabel, receiveBean);
@@ -250,7 +267,7 @@ class STTManager(private val extensionManager: ExtensionManager) :
         // 3、回消息
         val respBean = getResponseMsg(receiveBean)
         LogUtil.d("STTManager: respBean=$respBean")
-        val respJson = Gson().toJson(respBean)
+        val respJson = getResponseJson(respBean)
         LogUtil.d("STTManager: respJson=$respJson")
         //
         extensionManager.networkAdapter.sendDataOnAppDC(label, respJson,
@@ -276,5 +293,15 @@ class STTManager(private val extensionManager: ExtensionManager) :
         }
         translateRespBean.body = translateRespBodyBean
         return translateRespBean
+    }
+    private fun getResponseJson(translateRespBean: TranslateRespBean): String {
+        if (translateRespBean != null) {
+            val jsonObject = JSONObject()
+            jsonObject.put("innerUrl", translateRespBean.innerUrl)
+            jsonObject.put("msgId", translateRespBean.msgId)
+            jsonObject.put("body", Gson().toJson(translateRespBean.body))
+            return jsonObject.toString()
+        }
+        return ""
     }
 }

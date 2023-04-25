@@ -91,8 +91,6 @@ class JsCommunicator(
                 // call dataChannelNotify to JS
                 dataChannelNotify(dcLabels, object : CallBackFunction {
                     override fun onCallBack(data: String?) {
-                        // 如果是"屏幕共享"，约定此处不会被Js前端回调
-                        // （因屏幕共享由SDK实现，并不需要启动小程序，故不执行onCallBack后续代码逻辑）
                         // check arguments
                         if (data.isNullOrEmpty()) {
                             LogUtil.e("dataChannelNotify callback with empty")

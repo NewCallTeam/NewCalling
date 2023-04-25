@@ -199,7 +199,14 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                         } else {
                             getJsCommunicator().storageManager.getSpInSession()
                         }
-                        sp.put("$currAppId-${r.key}", r.value)
+                        val public = r.allowPublicAccess ?: false
+                        val key = if (!public) {
+                            "$currAppId-${r.key}"
+                        } else {
+                            r.key
+                        }
+                        LogUtil.d("saveData to sp, key=$key, value=${r.value}")
+                        sp.put(key, r.value)
                         invokeCallback(cbFromJs, ResponseData<Any>(result = 1))
                     } else {
                         invokeCallback(cbFromJs, ErrorCode.ARGUMENTS_ILLEGAL)
@@ -221,7 +228,14 @@ class CommonMiniAppJsHandler : BaseJsHandler() {
                         } else {
                             getJsCommunicator().storageManager.getSpInSession()
                         }
-                        val value = sp.get("$currAppId-${r.key}")
+                        val public = r.allowPublicAccess ?: false
+                        val key = if (!public) {
+                            "$currAppId-${r.key}"
+                        } else {
+                            r.key
+                        }
+                        LogUtil.d("getData from sp, key=$key")
+                        val value = sp.get(key)
                         invokeCallback(cbFromJs, ResponseData<Any>(result = 1, data = value))
                     } else {
                         invokeCallback(cbFromJs, ErrorCode.ARGUMENTS_ILLEGAL)

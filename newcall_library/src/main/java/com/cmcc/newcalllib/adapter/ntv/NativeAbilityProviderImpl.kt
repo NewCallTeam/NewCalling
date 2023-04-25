@@ -225,7 +225,7 @@ class NativeAbilityProviderImpl(
 //        mActivity?.startActivityForResult(intent, REQ_OPEN_PIC_BY_CAMERA)
 
         val intent = Intent(mActivity, InjectFragmentActivity::class.java)
-        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_ALL)
+        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_IMAGE)
         intent.putExtra(REQ_INTENT_EXTRA_CAPTURE, true)
         mActivity?.startActivityForResult(intent, REQ_OPEN_PIC_BY_CAMERA)
     }
@@ -238,7 +238,7 @@ class NativeAbilityProviderImpl(
 //        mActivity?.startActivityForResult(intent, REQ_OPEN_VIDEO_BY_CAMERA)
 
         val intent = Intent(mActivity, InjectFragmentActivity::class.java)
-        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_ALL)
+        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_VIDEO)
         intent.putExtra(REQ_INTENT_EXTRA_CAPTURE, true)
         mActivity?.startActivityForResult(intent, REQ_OPEN_VIDEO_BY_CAMERA)
     }
@@ -256,7 +256,7 @@ class NativeAbilityProviderImpl(
 //        mActivity?.startActivityForResult(intent, REQ_OPEN_PIC_BY_GALLERY)
 
         val intent = Intent(mActivity, InjectFragmentActivity::class.java)
-        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_ALL)
+        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_IMAGE)
         intent.putExtra(REQ_INTENT_EXTRA_CAPTURE, false)
         mActivity?.startActivityForResult(intent, REQ_OPEN_PIC_BY_GALLERY)
     }
@@ -274,7 +274,7 @@ class NativeAbilityProviderImpl(
 //        mActivity?.startActivityForResult(intent, REQ_OPEN_VIDEO_BY_GALLERY)
 
         val intent = Intent(mActivity, InjectFragmentActivity::class.java)
-        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_ALL)
+        intent.putExtra(REQ_INTENT_EXTRA_NAME, SelectMimeType.TYPE_VIDEO)
         intent.putExtra(REQ_INTENT_EXTRA_CAPTURE, false)
         mActivity?.startActivityForResult(intent, REQ_OPEN_VIDEO_BY_GALLERY)
     }

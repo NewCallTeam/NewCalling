@@ -30,8 +30,8 @@ data class CallTypeNotify(
     companion object {
         fun fromVideoState(videoState: Int): Int {
             return when (videoState) {
-                VideoProfile.STATE_AUDIO_ONLY -> 1
-                else -> 0
+                VideoProfile.STATE_AUDIO_ONLY -> 0
+                else -> 1
             }
         }
     }

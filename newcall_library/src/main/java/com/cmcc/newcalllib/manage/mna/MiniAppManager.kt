@@ -45,6 +45,7 @@ class MiniAppManager(
     companion object {
         private const val TOKEN_SEED = "CMCC_BOOTSTRAP"
         private const val HTTP_HEADER_IF_NONE_MATCH = "If-None-Match"
+        private const val HTTP_HEADER_ETAG = "ETag"
         private const val QUERY_TERMINAL_VENDOR = "Terminal_Vendor"
         private const val QUERY_TERMINAL_MODEL = "Terminal_Model"
 
@@ -204,7 +205,9 @@ class MiniAppManager(
                                     // TODO verify every time before render MNA
 
                                     // update db
-                                    val newestVer = headers?.get("ETag") ?: ""
+                                    val newestVer = headers?.filterKeys {
+                                        it.equals(HTTP_HEADER_ETAG, ignoreCase = true)
+                                    }?.values?.firstOrNull() ?: ""
                                     val now = System.currentTimeMillis()
                                     val toSave = if (appInDb == null) {
                                         MiniApp(

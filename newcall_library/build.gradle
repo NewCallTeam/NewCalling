@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdkVersion 28
         targetSdkVersion 30
-        versionCode 208
-        versionName "2.0.8"
+        versionCode 209
+        versionName "2.0.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -31,10 +31,17 @@ android {
             buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
         }
 
+        QualcommMi {
+            dimension "vendor"
+            buildConfigField("String", "ACTION_NAME", "\"com.cmcc.action.ims.datachannel\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.android.incallui\"")//provide by Xiaomi
+            buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
+        }
+
         Qualcomm {
             dimension "vendor"
             buildConfigField("String", "ACTION_NAME", "\"com.cmcc.action.ims.datachannel\"")
-            buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"")
+            buildConfigField("String", "PACKAGE_NAME", "\"com.cmcc.dcservice\"")//default, vivo use
             buildConfigField("long", "CHUNK_SIZE", "64000")  // rfc8864 sdp协商 max-message-size 默认为64k
         }
 
@@ -134,6 +141,15 @@ dependencies {
     // dc 涂鸦
     embed (name: 'newcall_sketch-release', ext: 'aar')
     api (name: 'newcall_sketch-release', ext: 'aar')
+//    // dc aidl接口
+//    embed project(':newcall_dc:newcall_dc_aidl')
+//    api project(':newcall_dc:newcall_dc_aidl')
+//    // dc http协议栈
+//    embed project(':newcall_dc:newcall_dc_httpstack')
+//    api project(':newcall_dc:newcall_dc_httpstack')
+//    // dc 涂鸦
+//    embed project(':newcall_dc:newcall_sketch')
+//    api project(':newcall_dc:newcall_sketch')
     // glide
     implementation "com.github.bumptech.glide:glide:4.12.0"
     // PictureSelector

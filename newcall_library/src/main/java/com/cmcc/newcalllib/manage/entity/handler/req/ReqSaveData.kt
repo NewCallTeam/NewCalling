@@ -7,6 +7,7 @@ package com.cmcc.newcalllib.manage.entity.handler.req
  */
 class ReqSaveData(
         val lifeCycle: Int? = LIFE_CYCLE_CROSS_SESSION,
+        val allowPublicAccess: Boolean? = false,
         val key: String,
         val value: String,
 ) {

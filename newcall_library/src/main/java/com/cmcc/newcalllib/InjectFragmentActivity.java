@@ -19,6 +19,7 @@ package com.cmcc.newcalllib;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -58,12 +59,14 @@ import com.luck.picture.lib.config.PictureConfig;
 import com.luck.picture.lib.config.PictureMimeType;
 import com.luck.picture.lib.config.PictureSelectionConfig;
 import com.luck.picture.lib.config.SelectMimeType;
+import com.luck.picture.lib.dialog.PhotoItemSelectedDialog;
 import com.luck.picture.lib.dialog.RemindDialog;
 
 import com.luck.picture.lib.engine.UriToFileTransformEngine;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.entity.MediaExtraInfo;
 import com.luck.picture.lib.immersive.ImmersiveManager;
+import com.luck.picture.lib.interfaces.OnItemClickListener;
 import com.luck.picture.lib.interfaces.OnKeyValueResultCallbackListener;
 import com.luck.picture.lib.permissions.PermissionConfig;
 import com.luck.picture.lib.style.BottomNavBarStyle;
@@ -98,6 +101,8 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
     private PictureSelectorFragment mSelectorFragment;
     private PictureCameraFragment mCameraFragment;
 
+    private int mCameraMode = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,11 +117,9 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         setStyle();
 
         if (isCaptureEnabled) {
-            pitchOnCamera();
-            addCameraFragment();
+            checkCameraMode();
         } else {
-            pitchOnGallery();
-            addSelectorFragment();
+            openGallery();
         }
     }
 
@@ -143,17 +146,25 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         mGallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pitchOnGallery();
-                addSelectorFragment();
+                openGallery();
             }
         });
         mCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pitchOnCamera();
-                addCameraFragment();
+                checkCameraMode();
             }
         });
+    }
+
+    private void openGallery() {
+        pitchOnGallery();
+        addSelectorFragment();
+    }
+
+    private void openCamera() {
+        pitchOnCamera();
+        addCameraFragment();
     }
 
     private void pitchOnGallery() {
@@ -173,7 +184,11 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         final FragmentTransaction transaction = fragmentManager.beginTransaction();
         if (selectorFragment != null) {
             if (cameraFragment != null) {
-                transaction.hide(cameraFragment);
+                if (mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()) == SelectMimeType.ofAll()) {
+                    transaction.remove(cameraFragment);
+                } else {
+                    transaction.hide(cameraFragment);
+                }
             }
             transaction.show(selectorFragment);
             transaction.commit();
@@ -191,6 +206,43 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         fragmentManager.beginTransaction()
                 .add(R.id.fragment_content, mSelectorFragment, mSelectorFragment.getFragmentTag())
                 .commitAllowingStateLoss();
+    }
+
+    /**
+     * 因为在展锐设备上使用点击拍照和长按录像时会在自拍的情况下导致拍照失败，所以改成只拍照或只录像
+     */
+    private void checkCameraMode() {
+        if (mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()) != SelectMimeType.ofAll()) {
+            openCamera();
+            return;
+        }
+        PhotoItemSelectedDialog photoItemSelectedDialog = PhotoItemSelectedDialog.newInstance();
+        photoItemSelectedDialog.setOnItemClickListener(new OnItemClickListener() {
+            @Override
+            public void onItemClick(View v, int position) {
+                switch (position) {
+                    case PhotoItemSelectedDialog.IMAGE_CAMERA:
+                        mCameraMode = SelectMimeType.TYPE_IMAGE;
+                        openCamera();
+                        break;
+                    case PhotoItemSelectedDialog.VIDEO_CAMERA:
+                        mCameraMode = SelectMimeType.TYPE_VIDEO;
+                        openCamera();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        photoItemSelectedDialog.setOnDismissListener(new PhotoItemSelectedDialog.OnDismissListener() {
+            @Override
+            public void onDismiss(boolean isCancel, DialogInterface dialog) {
+                if (isCancel) {
+                    openGallery();
+                }
+            }
+        });
+        photoItemSelectedDialog.show(getSupportFragmentManager(), "PhotoItemSelectedDialog");
     }
 
     private void pitchOnCamera() {
@@ -218,7 +270,11 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         }
         SimpleCameraX camera = SimpleCameraX.of();
         camera.isAutoRotation(true);
-        camera.setCameraMode(mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()));
+        if (mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()) == SelectMimeType.ofAll()) {
+            camera.setCameraMode(mCameraMode);
+        } else {
+            camera.setCameraMode(mIntent.getIntExtra(NativeAbilityProviderImpl.REQ_INTENT_EXTRA_NAME, SelectMimeType.ofAll()));
+        }
         camera.setVideoFrameRate(25);
         camera.setVideoBitRate(3 * 1024 * 1024);
         camera.isDisplayRecordChangeTime(true);
@@ -241,16 +297,14 @@ public class InjectFragmentActivity extends AppCompatActivity implements IBridge
         mCameraFragment.setFragmentListener(new FragmentListener() {
             @Override
             public void handleCameraSuccess() {
-                pitchOnGallery();
-                addSelectorFragment();
+                openGallery();
                 mSelectorFragment.onActivityResult(PictureConfig.REQUEST_CAMERA, Activity.RESULT_OK, getIntent());
             }
 
             @Override
             public void handleCameraCancel() {
                 LogUtil.INSTANCE.d(TAG, "handleCameraCancel");
-                pitchOnGallery();
-                addSelectorFragment();
+                openGallery();
             }
         });
     }
