@@ -3,7 +3,7 @@
 新通话终端套件，为支撑新通话业务而开发，免费贡献给新通话产业，终端厂家、芯片厂家、三方开发者可以基于开源版本进行二次开发，定制添加自定义需求，充分发挥运营商网络强大能力。  
 Develop by NewCall Team, Contribute to NewCall Bussiness.
 
-[Download demo app](http://xxx.com)
+[Download demo app](https://www.10086.cn/)
 
 ## 如何引用
 使用Gradle构建
@@ -74,7 +74,7 @@ dependencies {
 ```  
 
 ## 调用方式
-[NewCall_Library集成测试文档](http://xxx.com)
+[NewCall_Library集成测试文档](https://www.10086.cn/)
 
 ## 终端兼容性测试
 目前完成小米、vivo、中兴终端集成。
